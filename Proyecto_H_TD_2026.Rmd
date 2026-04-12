@@ -15,6 +15,17 @@ output: html_document
 #1.Introduccion
 
 #2.Importación y limpieza de datos.
+-En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
+
+```{r}
+library(tidyverse)
+
+logs <- read_csv("logs_moodle_anon.csv.zip", col_types = cols(Hora = col_datetime(format = "%d/%m/%y, %H:%M:%S")))
+
+view(logs)
+
+```
+
 
 #3.Análisis y visualización de datos.
 
