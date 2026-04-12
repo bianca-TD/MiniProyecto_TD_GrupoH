@@ -9,4 +9,24 @@ output: html_document
 
 **Abstract:** Este trabajo aborda la Fase1 del análisis de los registros de Moodle de la asignatura "Tratamiento de Datos". Nuestro objetivo principal ha sido el procesamiento del dataset proporcionado mediante R, en donde nos hemos centrado en su limpieza de los registros y la estructura de las variables. A parte, con los graficos podemos ver los primeros patrones en el comportamiento de los alumnos.
 
+
 **Palabras clave:** Análisis, Moodle, R, limpieza de datos, Tratamiento de Datos.
+
+#1.Introduccion
+
+#2.Importación y limpieza de datos.
+
+#3.Análisis y visualización de datos.
+
+#4.Preguntas.
+
+- ¿ En qué días de la semana hay más picos de actividad?
+
+- ¿Cuáles son las horas a las que prefieren estudiar los alumnos de "Tratamiento de datos"?
+
+
+
+
+
+
+
