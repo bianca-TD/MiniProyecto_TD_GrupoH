@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+data/*.csv
+
+# Archivos locales de RStudio
+.Rhistory
+.Rproj.user/

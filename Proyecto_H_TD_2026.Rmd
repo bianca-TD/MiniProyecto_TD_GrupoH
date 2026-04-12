@@ -18,11 +18,63 @@ output: html_document
 -En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
 
 ```{r}
-library(tidyverse)
+library(tidyverse)  
+library(lubridate)  
 
-logs <- read_csv("logs_moodle_anon.csv.zip", col_types = cols(Hora = col_datetime(format = "%d/%m/%y, %H:%M:%S")))
 
-view(logs)
+logs <- read_csv("logs_moodle_anon.csv")
+
+
+glimpse(logs)
+
+# Renombrado de variables 
+logs <- logs %>%
+  rename(
+    fecha_hora = Hora,
+    usuario = `Nombre completo del usuario`,
+    usuario_afectado = `Usuario afectado`,
+    contexto = `Contexto del evento`,
+    componente = Componente,
+    evento = `Nombre evento`,
+    descripcion = Descripción,
+    origen = Origen,
+    ip = `Dirección IP`)
+
+# Fecha y hora al formato adecuado
+logs <- logs %>%
+  mutate(fecha_hora = dmy_hms(fecha_hora))
+
+# Creación de variables temporales 
+logs <- logs %>%
+  mutate(
+    fecha = as.Date(fecha_hora),
+    hora = hour(fecha_hora),
+    dia_semana = wday(fecha_hora, label = TRUE, abbr = FALSE),
+    mes = month(fecha_hora, label = TRUE)
+  )
+
+# Variables categoricas a factor
+logs <- logs %>%
+  mutate(
+    usuario = as.factor(usuario),
+    usuario_afectado = as.factor(usuario_afectado),
+    contexto = as.factor(contexto),
+    componente = as.factor(componente),
+    evento = as.factor(evento),
+    origen = as.factor(origen))
+
+
+n_filas_inicial <- nrow(logs)
+
+# Eliminación de registros duplicados
+logs <- logs %>%
+  distinct()
+
+
+n_filas_final <- nrow(logs)
+
+
+
 
 ```
 
