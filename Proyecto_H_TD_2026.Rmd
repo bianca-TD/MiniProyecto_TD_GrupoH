@@ -141,7 +141,7 @@ ggplot(logs, aes(x = hora)) +
 - ¿Cuáles son las horas a las que prefieren estudiar los alumnos de "Tratamiento de datos"?
 
 
-
+-¿Se observan picos de actividad masivos justo en los días previos a las entregas de trabajos o cuestionarios en comparación con el resto del mes?
 
 
 
