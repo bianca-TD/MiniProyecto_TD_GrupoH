@@ -13,6 +13,7 @@ output: html_document
 **Palabras clave:** Análisis, Moodle, R, limpieza de datos, Tratamiento de Datos.
 
 #1.Introduccion
+El presente proyecto se centra en el análisis de los registros de actividad (logs) de la plataforma Moodle para la asignatura "Tratamiento de Datos" durante el curso académico 2024-2025. El objetivo principal es transformar estos datos en bruto en conocimiento accionable, permitiendo identificar patrones de estudio, niveles de participación y la eficacia de los recursos didácticos ofrecidos. A través de este análisis exploratorio, buscamos responder a preguntas clave sobre cómo y cuándo interactúan los estudiantes con el entorno virtual de aprendizaje.
 
 #2.Importación y limpieza de datos.
 -En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
