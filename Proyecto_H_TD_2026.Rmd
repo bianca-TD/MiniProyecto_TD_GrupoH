@@ -147,4 +147,5 @@ ggplot(logs, aes(x = hora)) +
 -¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana?
 
 
+## Introducción
 
