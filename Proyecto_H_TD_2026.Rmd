@@ -9,14 +9,11 @@ output: html_document
 
 **Abstract:** Este trabajo aborda la Fase1 del análisis de los registros de Moodle de la asignatura "Tratamiento de Datos". Nuestro objetivo principal ha sido el procesamiento del dataset proporcionado mediante R, en donde nos hemos centrado en su limpieza de los registros y la estructura de las variables. A parte, con los graficos podemos ver los primeros patrones en el comportamiento de los alumnos.
 
-
 **Palabras clave:** Análisis, Moodle, R, limpieza de datos, Tratamiento de Datos.
 
-#1.Introduccion
-El presente proyecto se centra en el análisis de los registros de actividad (logs) de la plataforma Moodle para la asignatura "Tratamiento de Datos" durante el curso académico 2024-2025. El objetivo principal es transformar estos datos en bruto en conocimiento accionable, permitiendo identificar patrones de estudio, niveles de participación y la eficacia de los recursos didácticos ofrecidos. A través de este análisis exploratorio, buscamos responder a preguntas clave sobre cómo y cuándo interactúan los estudiantes con el entorno virtual de aprendizaje.
+#1.Introduccion El presente proyecto se centra en el análisis de los registros de actividad (logs) de la plataforma Moodle para la asignatura "Tratamiento de Datos" durante el curso académico 2024-2025. El objetivo principal es transformar estos datos en bruto en conocimiento accionable, permitiendo identificar patrones de estudio, niveles de participación y la eficacia de los recursos didácticos ofrecidos. A través de este análisis exploratorio, buscamos responder a preguntas clave sobre cómo y cuándo interactúan los estudiantes con el entorno virtual de aprendizaje.
 
-#2.Importación y limpieza de datos.
--En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
+#2.Importación y limpieza de datos. -En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
 
 ```{r}
 library(tidyverse)  
@@ -79,7 +76,6 @@ n_filas_final <- nrow(logs)
 
 ```
 
-
 #3.Análisis y visualización de datos.
 
 En esta primera fase de análisis exploratorio, el objetivo principal es comprender la estructura y las dimensiones de nuestro conjunto de datos tras el proceso de limpieza. La Tabla \@ref(tab:resumen-dataset) muestra las métricas generales que nos ayudan a dimensionar la información con la que vamos a trabajar.
@@ -99,7 +95,6 @@ resumen <- data.frame(
 
 knitr::kable(resumen, caption = "Resumen estructural del conjunto de datos.")
 ```
-
 
 Es necesario definir la estructura final de nuestro conjunto de datos. Tras las transformaciones realizadas en la fase anterior, las variables han sido categorizadas según su naturaleza técnica y analítica. El Diccionario de Datos resultante se presenta en la Tabla \@ref(tab:diccionario-datos).
 
@@ -133,19 +128,18 @@ ggplot(logs, aes(x = hora)) +
   theme_minimal()
 ```
 
-
-
 #4.Preguntas.
 
-- ¿ En qué días de la semana hay más picos de actividad?
+-   ¿ En qué días de la semana hay más picos de actividad?
 
-- ¿Cuáles son las horas a las que prefieren estudiar los alumnos de "Tratamiento de datos"?
+-   ¿Cuáles son las horas a las que prefieren estudiar los alumnos de "Tratamiento de datos"?
 
+-   ¿Se observan picos de actividad masivos justo en los días previos a las entregas de trabajos o cuestionarios en comparación con el resto del mes?
 
--¿Se observan picos de actividad masivos justo en los días previos a las entregas de trabajos o cuestionarios en comparación con el resto del mes?
+-   ¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana o festivos?
 
--¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana?
+-   ¿Qué porcentaje de la actividad se realiza en la ETSE y qué porcentaje se realiza fuera de esta?
 
+-   ¿Se registra más actividad en las tardes de los días con clase o en los días sin clase de tratamiento de datos?
 
-## Introducción
-
+-   ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
