@@ -144,7 +144,7 @@ ggplot(logs, aes(x = hora)) +
 
 -¿Se observan picos de actividad masivos justo en los días previos a las entregas de trabajos o cuestionarios en comparación con el resto del mes?
 
--¿Existe una relación entre el tipo de recurso consultado (URL, archivo, foro) y el momento del día en que acceden los estudiantes?
+-¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana?
 
 
 
