@@ -56,11 +56,11 @@ language:
 
 **Palabras clave:** Análisis, Moodle, R, limpieza de datos, Tratamiento de Datos.
 
-#Introduccion 
+# Introduccion 
 
 El presente proyecto se centra en el análisis de los registros de actividad (logs) de la plataforma Moodle para la asignatura "Tratamiento de Datos" durante el curso académico 2024-2025. El objetivo principal es transformar estos datos en bruto en conocimiento accionable, permitiendo identificar patrones de estudio, niveles de participación y la eficacia de los recursos didácticos ofrecidos. A través de este análisis exploratorio, buscamos responder a preguntas clave sobre cómo y cuándo interactúan los estudiantes con el entorno virtual de aprendizaje.
 
-#Importación y limpieza de datos. 
+# Importación y limpieza de datos. 
 
 En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
 
@@ -125,7 +125,7 @@ n_filas_final <- nrow(logs)
 
 ```
 
-#Análisis y visualización de datos.
+# Análisis y visualización de datos.
 
 En esta primera fase de análisis exploratorio, el objetivo principal es comprender la estructura y las dimensiones de nuestro conjunto de datos tras el proceso de limpieza. La Tabla \@ref(tab:resumen-dataset) muestra las métricas generales que nos ayudan a dimensionar la información con la que vamos a trabajar.
 
@@ -177,7 +177,7 @@ ggplot(logs, aes(x = hora)) +
   theme_minimal()
 ```
 
-#Preguntas.
+# Preguntas.
 
 -   ¿ En qué días de la semana hay más picos de actividad?
 
