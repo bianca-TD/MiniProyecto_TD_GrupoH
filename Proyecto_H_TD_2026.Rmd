@@ -143,3 +143,6 @@ ggplot(logs, aes(x = hora)) +
 -   ¿Se registra más actividad en las tardes de los días con clase o en los días sin clase de tratamiento de datos?
 
 -   ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
+
+
+
