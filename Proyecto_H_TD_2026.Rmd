@@ -193,5 +193,21 @@ ggplot(logs, aes(x = hora)) +
 
 -   ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
 
+```{r distribucion-horas, echo=FALSE, message = FALSE, warning = FALSE}
+
+# Filtramos los componentes que representan tareas y apuntes
+comparativa <- logs %>%
+  filter(componente %in% c("Tarea", "Archivo", "Carpeta")) %>%
+  mutate(tipo_recurso = ifelse(componente == "Tarea", "Tareas (Entregas)", "Apuntes (Materiales)"))
+
+# Creamos el gráfico
+ggplot(comparativa, aes(x = tipo_recurso, fill = tipo_recurso)) +
+  geom_bar() +
+  labs(title = "Actividad: Tareas vs. Apuntes de clase",
+       x = "Tipo de Recurso",
+       y = "Número de interacciones") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
 
 
