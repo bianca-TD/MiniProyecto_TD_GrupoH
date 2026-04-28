@@ -20,7 +20,7 @@ library(tidyverse)
 library(lubridate)  
 
 
-logs <- read_csv("logs_moodle_anon.csv")
+logs <- read_csv("data/logs_moodle_anon.csv")
 
 
 glimpse(logs)
