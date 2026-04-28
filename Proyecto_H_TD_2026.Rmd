@@ -2,20 +2,69 @@
 title: "ProyectoTD2026"
 author: "GrupoH"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  bookdown::html_document2:
+    echo: true
+    number_sections: true
+    theme: spacelab
+    toc: true
+    figure_caption: "Figura"
+    table_caption: "Tabla"
+  bookdown::pdf_document2:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    figure_caption: "Figura" # Referencias en castellano
+    table_caption: "Tabla"
+  html_notebook:
+    echo: true
+    number_sections: true
+    toc: true
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  html_document:
+    echo: true
+    number_sections: true
+    theme: lumen
+    toc: true
+always_allow_html: true
+params:
+  lang: ES
+lang: "`r switch(params$lang, ES = 'es-ES', EN = 'en-US')`"
+subtitle: "Tratamiento de los Datos. Grado en Ciencia de Datos- UV"
+language:
+  label:
+    fig: 'Figura '
+    tab: 'Tabla '
+    eq: 'Ecuación '
+    thm: 'Teorema '
+    lem: 'Lema '
+    def: 'Definición '
+    cor: 'Corolario '
+    prp: 'Proposición '
+    exm: 'Ejemplo '
+    exr: 'Ejercicio '
+    proof: 'Demostración. '
+    remark: 'Nota: '
+    solution: 'Solución. '
 ---
-
 **Simple Summary:** En este proyecto, analizaremos un conjunto de datos real el cual corresponde a los registros de actividad de la asignatura "Tratamiento de Datos" del curso 2024-2025. El trabajo se centra en transformar los datos brutos en información útil, para poder ver como interactúan los estudiantes con los materiales del curso.
 
 **Abstract:** Este trabajo aborda la Fase1 del análisis de los registros de Moodle de la asignatura "Tratamiento de Datos". Nuestro objetivo principal ha sido el procesamiento del dataset proporcionado mediante R, en donde nos hemos centrado en su limpieza de los registros y la estructura de las variables. A parte, con los graficos podemos ver los primeros patrones en el comportamiento de los alumnos.
 
 **Palabras clave:** Análisis, Moodle, R, limpieza de datos, Tratamiento de Datos.
 
-#1.Introduccion El presente proyecto se centra en el análisis de los registros de actividad (logs) de la plataforma Moodle para la asignatura "Tratamiento de Datos" durante el curso académico 2024-2025. El objetivo principal es transformar estos datos en bruto en conocimiento accionable, permitiendo identificar patrones de estudio, niveles de participación y la eficacia de los recursos didácticos ofrecidos. A través de este análisis exploratorio, buscamos responder a preguntas clave sobre cómo y cuándo interactúan los estudiantes con el entorno virtual de aprendizaje.
+# Introduccion 
 
-#2.Importación y limpieza de datos. -En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
+El presente proyecto se centra en el análisis de los registros de actividad (logs) de la plataforma Moodle para la asignatura "Tratamiento de Datos" durante el curso académico 2024-2025. El objetivo principal es transformar estos datos en bruto en conocimiento accionable, permitiendo identificar patrones de estudio, niveles de participación y la eficacia de los recursos didácticos ofrecidos. A través de este análisis exploratorio, buscamos responder a preguntas clave sobre cómo y cuándo interactúan los estudiantes con el entorno virtual de aprendizaje.
 
-```{r}
+# Importación y limpieza de datos. 
+
+En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
+
+```{r, echo=FALSE, message = FALSE, warning = FALSE}
 library(tidyverse)  
 library(lubridate)  
 
@@ -76,7 +125,7 @@ n_filas_final <- nrow(logs)
 
 ```
 
-#3.Análisis y visualización de datos.
+# Análisis y visualización de datos.
 
 En esta primera fase de análisis exploratorio, el objetivo principal es comprender la estructura y las dimensiones de nuestro conjunto de datos tras el proceso de limpieza. La Tabla \@ref(tab:resumen-dataset) muestra las métricas generales que nos ayudan a dimensionar la información con la que vamos a trabajar.
 
@@ -117,7 +166,7 @@ knitr::kable(diccionario, caption = "Diccionario de variables y tipos de datos t
 
 Una vez comprendida la magnitud de los datos, el siguiente paso del análisis exploratorio es visualizar cómo se distribuyen estos registros. Como ejemplo de esta exploración univariante, la Figura \@ref(fig:distribucion-horas) ilustra la frecuencia de los registros a lo largo de las distintas horas del día.
 
-```{r distribucion-horas, echo=FALSE, message = FALSE, warning = FALSE}
+```{r distribucion-horas, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Distribución horaria de los registros"}
 
 ggplot(logs, aes(x = hora)) +
   geom_bar(fill = "darkblue", color = "black", alpha = 0.8) +
@@ -128,7 +177,7 @@ ggplot(logs, aes(x = hora)) +
   theme_minimal()
 ```
 
-#4.Preguntas.
+# Preguntas.
 
 -   ¿ En qué días de la semana hay más picos de actividad?
 
