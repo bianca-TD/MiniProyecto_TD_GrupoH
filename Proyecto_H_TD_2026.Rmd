@@ -252,6 +252,65 @@ ggplot(resumen_antelacion, aes(x = perfil_entrega, y = porcentaje, fill = perfil
 ```
 
 -   ¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana o festivos?
+```{r}
+# PREGUNTA: ¿Hay diferencias entre días laborables, fines de semana y festivos?
+
+# 1. INYECCIÓN DE CONTEXTO: Definimos los festivos oficiales (Calendario UV 2025)
+# Ajusta estas fechas según el calendario académico real de tu curso
+festivos_uv <- as.Date(c(
+  "2025-01-01", "2025-01-06", "2025-01-22", # Año Nuevo, Reyes, San Vicente Mártir
+  "2025-03-17", "2025-03-18", "2025-03-19", # Semana de Fallas (días sin clase)
+  "2025-04-17", "2025-04-18", "2025-04-21", "2025-04-28", # Jueves Santo a San Vicente Ferrer
+  "2025-05-01",                             # Día del Trabajador
+  "2025-06-24"                              # San Juan
+))
+
+# 2. Agrupamos la actividad por día y clasificamos
+actividad_calendario <- logs %>%
+  # Agrupamos todo por día para contar cuántos clics hubo
+  group_by(fecha) %>%
+  summarise(interacciones = n()) %>%
+  mutate(
+    # Usamos week_start = 1 para que Lunes sea 1 y Domingo 7
+    dia_semana_num = wday(fecha, week_start = 1), 
+    tipo_dia = case_when(
+      fecha %in% festivos_uv ~ "Festivo (Sin clase)",
+      dia_semana_num %in% c(6, 7) ~ "Fin de semana",
+      TRUE ~ "Laborable"
+    )
+  )
+
+# 3. TABLA: Comparamos las medias y medianas
+resumen_calendario <- actividad_calendario %>%
+  group_by(tipo_dia) %>%
+  summarise(
+    dias_totales = n(),
+    media_diaria = round(mean(interacciones), 1),
+    mediana_diaria = median(interacciones) # Usamos mediana para que los picos no distorsionen tanto
+  ) %>%
+  arrange(desc(media_diaria))
+
+knitr::kable(resumen_calendario, caption = "Actividad media y mediana según el calendario académico.")
+
+# 4. GRÁFICO: Boxplot para ver la "diferencia significativa" visualmente
+# El factor se reordena para que salga en un orden lógico en el gráfico
+actividad_calendario$tipo_dia <- factor(actividad_calendario$tipo_dia, 
+                                        levels = c("Laborable", "Fin de semana", "Festivo (Sin clase)"))
+
+ggplot(actividad_calendario, aes(x = tipo_dia, y = interacciones, fill = tipo_dia)) +
+  geom_boxplot(alpha = 0.7, color = "black", outlier.color = "darkred", outlier.shape = 16) +
+  # Añadimos la media como un punto blanco extra dentro de la caja
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "white") +
+  scale_fill_manual(values = c("Laborable" = "#4DAF4A", 
+                               "Fin de semana" = "#377EB8", 
+                               "Festivo (Sin clase)" = "#E41A1C")) +
+  labs(title = "Distribución de la actividad de estudio",
+       subtitle = "El diamante blanco indica la media; la línea central negra, la mediana.",
+       x = "Tipo de día",
+       y = "Volumen de interacciones diarias") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
 
 -   ¿Qué porcentaje de la actividad se realiza en la ETSE y qué porcentaje se realiza fuera de esta?
 
