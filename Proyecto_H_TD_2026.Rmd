@@ -187,7 +187,69 @@ ggplot(logs, aes(x = hora)) +
 
 -   ¿Cuáles son las horas a las que prefieren estudiar los alumnos de "Tratamiento de datos"?
 
--   ¿Se observan picos de actividad masivos justo en los días previos a las entregas de trabajos o cuestionarios en comparación con el resto del mes?
+-   ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
+```{r}
+
+# 1. Filtramos solo los eventos de entrega de Tareas
+# Buscamos la acción donde el alumno realmente envía el trabajo
+entregas_reales <- logs %>%
+  filter(
+    componente == "Tarea", 
+    str_detect(evento, "entrega|Submission") # Filtra eventos que contengan la palabra "entrega" o "Submission"
+  )
+
+# 2. Inyectamos la fecha/hora exacta de cierre del Miniproyecto
+fecha_cierre_miniproyecto <- ymd_hms("2025-05-13 23:55:00") 
+
+# 3. Calculamos la diferencia en horas
+analisis_antelacion <- entregas_reales %>%
+  # Nos quedamos con las entregas de mayo (para aislar las del Miniproyecto)
+  filter(fecha >= as.Date("2025-05-01") & fecha_hora <= fecha_cierre_miniproyecto) %>%
+  # Nos quedamos con la última entrega de cada usuario por si la modificaron
+  group_by(usuario) %>%
+  filter(fecha_hora == max(fecha_hora)) %>%
+  ungroup() %>%
+  mutate(
+    # Calculamos cuántas horas faltaban para el cierre
+    horas_antelacion = as.numeric(difftime(fecha_cierre_miniproyecto, fecha_hora, units = "hours")),
+    # Clasificamos al alumno
+    perfil_entrega = case_when(
+      horas_antelacion > 48 ~ "Con mucha antelación (>2 días)",
+      horas_antelacion > 24 & horas_antelacion <= 48 ~ "El día de antes",
+      horas_antelacion > 6 & horas_antelacion <= 24 ~ "El mismo día",
+      horas_antelacion <= 6 ~ "Último minuto (<6 horas)"
+    )
+  )
+
+# 4. Tabla resumen de perfiles
+resumen_antelacion <- analisis_antelacion %>%
+  group_by(perfil_entrega) %>%
+  summarise(numero_alumnos = n()) %>%
+  mutate(porcentaje = round((numero_alumnos / sum(numero_alumnos)) * 100, 1)) %>%
+  arrange(desc(porcentaje))
+
+knitr::kable(resumen_antelacion, caption = "Clasificación de los alumnos según la antelación de entrega (Miniproyecto).")
+
+# 5. Gráfico de barras
+# Reordenamos los factores para que el gráfico tenga un orden lógico temporal
+resumen_antelacion$perfil_entrega <- factor(resumen_antelacion$perfil_entrega, 
+                                            levels = c("Con mucha antelación (>2 días)", 
+                                                       "El día de antes", 
+                                                       "El mismo día", 
+                                                       "Último minuto (<6 horas)"))
+
+ggplot(resumen_antelacion, aes(x = perfil_entrega, y = porcentaje, fill = perfil_entrega)) +
+  geom_col(color = "black", alpha = 0.8) +
+  geom_text(aes(label = paste0(porcentaje, "%")), vjust = -0.5, fontface = "bold") +
+  scale_fill_brewer(palette = "YlOrRd", direction = -1) + # Paleta que va de suave a rojo urgencia
+  labs(title = "¿Cuándo entregan el Miniproyecto los alumnos?",
+       subtitle = "Análisis de antelación respecto a la fecha límite",
+       x = "Momento de la entrega",
+       y = "Porcentaje de alumnos (%)") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
 -   ¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana o festivos?
 
