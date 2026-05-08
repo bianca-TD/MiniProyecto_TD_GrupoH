@@ -80,9 +80,28 @@ Para alcanzar el objetivo establecido, el trabajo se estructura en torno a la re
 
 -   ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
 
-# Importación y limpieza de datos. 
+# Metodología y Preparación de Datos 
 
-En esta parte se realiza la carga del conjunto de datos original y se aplican las transformaciones necesarias para su posterior análisis. Esto implica la conversión de los tipos de datos y la eliminación de aquellos registros que no nos resulten relevantes.
+La fase de preparación de datos es la etapa crítica de este proyecto, para garantizar la calidad, consistencia y fiabilidad de los resultados. En esta sección se detalla el proceso de ingesta, limpieza y transformación del conjunto de datos original (`logs_moodle_anon.csv`), adaptándolo para el Análisis Exploratorio de Datos.
+
+Para llevar a cabo este procesamiento, se ha utilizado el entorno de programación R, empleando la colección de paquetes `tidyverse` para la manipulación eficiente de *dataframes* y la librería `lubridate` para el tratamiento avanzado de series temporales. 
+
+El flujo de trabajo aplicado consta de las siguientes fases metodológicas:
+
+
+## Importación y estandarización
+
+En primer lugar, se procede a la carga del archivo original. Las bases de datos provenientes de sistemas como Moodle suelen contener nombres de columnas con espacios y caracteres especiales. Para facilitar el manejo programático y mantener un código limpio, se han renombrado estas variables bajo un estándar consistente (por ejemplo, transformando "Nombre completo del usuario" a `usuario` y "Contexto del evento" a `contexto`).
+
+## Gestión temporal e Ingeniería de variables
+Dado que gran parte de nuestras preguntas de investigación tienen un carácter cronológico, la variable original de tiempo se ha convertido al formato estándar de fecha y hora (`POSIXct`) mediante la función `dmy_hms()`. A partir de esta marca temporal, se han extraído e ingeniado nuevas características (*feature engineering*) que serán fundamentales para el análisis: la fecha exacta (`fecha`), la hora del día (`hora`), el día de la semana (`dia_semana`) y el mes (`mes`).
+
+
+## Limpieza, tipado y filtrado
+
+Para delimitar el alcance del estudio al periodo lectivo correspondiente, se ha aplicado un filtro para conservar exclusivamente los registros del cuatrimestre activo (del 1 de enero al 31 de julio de 2025). 
+
+Además, se ha realizado una conversión de tipos de datos (*Type casting*), transformando las variables de naturaleza categórica a formato *factor*. Esta operación no solo optimiza el uso de la memoria, sino que es un requisito indispensable para la correcta generación de gráficos y la aplicación de métodos estadísticos. Finalmente, para asegurar la integridad de la información, se han eliminado los posibles registros duplicados del sistema, obteniendo así nuestro conjunto de datos final y limpio.
 
 ```{r, echo=FALSE, message = FALSE, warning = FALSE}
 library(tidyverse)  
@@ -145,13 +164,20 @@ logs <- logs %>%
 n_filas_final <- nrow(logs)
 
 
-
+glimpse(logs)
 
 ```
 
 # Análisis y visualización de datos.
 
-En esta primera fase de análisis exploratorio, el objetivo principal es comprender la estructura y las dimensiones de nuestro conjunto de datos tras el proceso de limpieza. La Tabla \@ref(tab:resumen-dataset) muestra las métricas generales que nos ayudan a dimensionar la información con la que vamos a trabajar.
+El Análisis Exploratorio de Datos constituye la fase central de nuestro estudio. En esta etapa, aplicamos técnicas estadísticas y de visualización para descubrir patrones, comprender la distribución de la actividad en el Aula Virtual y asentar las bases antes de responder a las preguntas de investigación.
+
+## Análisis Estructural y Diccionario de Datos
+
+Tras ejecutar el proceso de limpieza y la creación de nuevas variables temporales (*Feature Engineering*), el conjunto de datos definitivo (`logs`) se compone de **107.105 observaciones** y **13 variables**. Este volumen de registros limpios representa el núcleo de nuestro análisis. 
+
+A continuación, en la Tabla \@ref(tab:resumen-dataset) se exponen las métricas generales que dimensionan el ecosistema de la asignatura, mostrando la cantidad de alumnos implicados y la diversidad de acciones que pueden realizar.
+
 
 ```{r resumen-dataset, echo = FALSE, warning = FALSE, message = FALSE}
 
@@ -168,27 +194,44 @@ resumen <- data.frame(
 
 knitr::kable(resumen, caption = "Resumen estructural del conjunto de datos.")
 ```
-
-Es necesario definir la estructura final de nuestro conjunto de datos. Tras las transformaciones realizadas en la fase anterior, las variables han sido categorizadas según su naturaleza técnica y analítica. El Diccionario de Datos resultante se presenta en la Tabla \@ref(tab:diccionario-datos).
+Para garantizar la reproducibilidad y la correcta interpretación de los análisis posteriores, es indispensable documentar el estado final de las características del dataframe. El Diccionario de Datos resultante, donde se especifican los tipos (como Factor o POSIXct), se presenta en la Tabla @ref(tab:diccionario-datos).
 
 ```{r diccionario-datos, echo = FALSE, warning = FALSE, message = FALSE}
 
-diccionario <- data.frame(
-  Variable = c("fecha_hora", "usuario", "contexto", "componente", "evento", "hora", "dia_semana"),
-  Tipo = c("POSIXct (Fecha/Hora)", "Factor", "Factor", "Factor", "Factor", "Numérico (0-23)", "Factor (Ordenado)"),
-  Descripción = c("Marca temporal exacta del evento.", 
-                  "Nombre del usuario anonimizado.",
-                  "Ámbito donde ocurre el evento.",
-                  "Recurso o actividad de Moodle.",
-                  "Acción específica realizada.",
-                  "Hora del día extraída.",
-                  "Día de la semana extraído.")
+# Creamos el dataframe con las 13 variables actuales
+diccionario_final <- data.frame(
+  Variable = c("fecha_hora", "usuario", "usuario_afectado", "contexto", 
+               "componente", "evento", "descripcion", "origen", 
+               "ip", "fecha", "hora", "dia_semana", "mes"),
+  Tipo = c("POSIXct (datetime)", "Factor", "Factor", "Factor", 
+           "Factor", "Factor", "Character", "Factor", 
+           "Character", "Date", "Integer", "Ordered Factor", "Ordered Factor"),
+  Descripción = c("Marca de tiempo completa (fecha y hora).",
+                  "Identificador único del usuario (anonimizado).",
+                  "Usuario sobre el que recae la acción (si aplica).",
+                  "Entorno o curso donde ocurre el evento.",
+                  "Módulo de Moodle (Tarea, Foro, Sistema, etc.).",
+                  "Acción específica realizada por el usuario.",
+                  "Descripción detallada de la interacción.",
+                  "Plataforma de acceso (web o móvil).",
+                  "Dirección de red del dispositivo (IPv4/IPv6).",
+                  "Fecha del evento (YYYY-MM-DD).",
+                  "Hora del día en formato 24h (0-23).",
+                  "Día de la semana (Lunes-Domingo).",
+                  "Mes del año (Enero-Diciembre).")
 )
 
-knitr::kable(diccionario, caption = "Diccionario de variables y tipos de datos tras el procesamiento.")
+# Generamos la tabla profesional
+knitr::kable(diccionario_final, 
+             caption = "Diccionario de datos final tras el proceso de ingeniería de variables.")
 ```
 
-Una vez comprendida la magnitud de los datos, el siguiente paso del análisis exploratorio es visualizar cómo se distribuyen estos registros. Como ejemplo de esta exploración univariante, la Figura \@ref(fig:distribucion-horas) ilustra la frecuencia de los registros a lo largo de las distintas horas del día.
+
+## Exploración Univariante: Distribución de la actividad general 
+
+Una vez validada la integridad y estructura de la información, procedemos a examinar cómo se distribuyen de forma general estos registros. Comprender en qué momentos del día interactúan los alumnos con la plataforma es vital para establecer el ritmo base de la asignatura.
+
+Como ejemplo principal de esta exploración univariante, la Figura @ref(fig:distribucion-horas) ilustra la frecuencia de los accesos e interacciones a lo largo de las distintas horas del día. Esta visualización nos permite identificar de un vistazo las franjas de mayor rendimiento y los periodos de inactividad nocturna.
 
 ```{r distribucion-horas, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Distribución horaria de los registros"}
 
@@ -200,7 +243,8 @@ ggplot(logs, aes(x = hora)) +
        title = "Distribución horaria de los registros") +
   theme_minimal()
 ```
-# Outliers
+## Detección y análisis de valores atípicos (Outliers)
+
 
 ```{r analisis-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución del volumen de actividad por usuario."}
 
