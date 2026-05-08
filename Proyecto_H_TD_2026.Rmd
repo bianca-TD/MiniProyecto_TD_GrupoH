@@ -194,7 +194,7 @@ resumen <- data.frame(
 
 knitr::kable(resumen, caption = "Resumen estructural del conjunto de datos.")
 ```
-Para garantizar la reproducibilidad y la correcta interpretación de los análisis posteriores, es indispensable documentar el estado final de las características del dataframe. El Diccionario de Datos resultante, donde se especifican los tipos (como Factor o POSIXct), se presenta en la Tabla @ref(tab:diccionario-datos).
+Para garantizar la reproducibilidad y la correcta interpretación de los análisis posteriores, es indispensable documentar el estado final de las características del dataframe. El Diccionario de Datos resultante, donde se especifican los tipos (como Factor o POSIXct), se presenta en la Tabla \@ref(tab:diccionario-datos).
 
 ```{r diccionario-datos, echo = FALSE, warning = FALSE, message = FALSE}
 
@@ -231,7 +231,7 @@ knitr::kable(diccionario_final,
 
 Una vez validada la integridad y estructura de la información, procedemos a examinar cómo se distribuyen de forma general estos registros. Comprender en qué momentos del día interactúan los alumnos con la plataforma es vital para establecer el ritmo base de la asignatura.
 
-Como ejemplo principal de esta exploración univariante, la Figura @ref(fig:distribucion-horas) ilustra la frecuencia de los accesos e interacciones a lo largo de las distintas horas del día. Esta visualización nos permite identificar de un vistazo las franjas de mayor rendimiento y los periodos de inactividad nocturna.
+Como ejemplo principal de esta exploración univariante, la Figura \@ref(fig:distribucion-horas) ilustra la frecuencia de los accesos e interacciones a lo largo de las distintas horas del día. Esta visualización nos permite identificar de un vistazo las franjas de mayor rendimiento y los periodos de inactividad nocturna.
 
 ```{r distribucion-horas, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Distribución horaria de los registros"}
 
@@ -245,7 +245,11 @@ ggplot(logs, aes(x = hora)) +
 ```
 ## Detección y análisis de valores atípicos (Outliers)
 
+En el contexto de la Analítica del Aprendizaje, el volumen de actividad de un estudiante en el Aula Virtual rara vez sigue una distribución normal perfecta, ya que suele presentar una fuerte asimetría positiva. Por tanto, es fundamental identificar si existen usuarios con un comportamiento anómalo (*outliers*), ya sea por un exceso de interacciones ("hiperactivos") o por un déficit preocupante ("inactivos").
 
+Para llevar a cabo esta detección de forma robusta, hemos aplicado el método no paramétrico del **Rango Intercuartílico (IQR)** sobre el volumen total de clics por usuario. Este método define como atípico cualquier valor que se aleje 1.5 veces el tamaño del IQR por encima del tercer cuartil ($Q_3$) o por debajo del primer cuartil ($Q_1$).
+
+El siguiente bloque de código calcula estos límites estadísticos, aísla a los estudiantes con comportamiento extremo en la Tabla \@ref(tab:analisis-outliers) y proyecta visualmente la distribución de toda la clase en la Figura \@ref(fig:analisis-outliers).
 ```{r analisis-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución del volumen de actividad por usuario."}
 
 # 1. Calculamos el total de interacciones (clics) por usuario
