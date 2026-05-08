@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 3
     number_sections: true
-    figure_caption: "Figura" # Referencias en castellano
+    figure_caption: "Figura" 
     table_caption: "Tabla"
   bookdown::html_document2:
     echo: true
@@ -16,23 +16,7 @@ output:
     toc: true
     figure_caption: "Figura"
     table_caption: "Tabla"
-  html_notebook:
-    echo: true
-    number_sections: true
-    toc: true
-  pdf_document:
-    toc: true
-    toc_depth: 3
-    number_sections: true
-  html_document:
-    echo: true
-    number_sections: true
-    theme: lumen
-    toc: true
 always_allow_html: true
-params:
-  lang: ES
-lang: "`r switch(params$lang, ES = 'es-ES', EN = 'en-US')`"
 subtitle: "Tratamiento de los Datos. Grado en Ciencia de Datos- UV"
 language:
   label:
@@ -111,7 +95,6 @@ library(lubridate)
 logs <- read_csv("data/logs_moodle_anon.csv")
 
 
-glimpse(logs)
 
 # Renombrado de variables 
 logs <- logs %>%
@@ -164,7 +147,6 @@ logs <- logs %>%
 n_filas_final <- nrow(logs)
 
 
-glimpse(logs)
 
 ```
 
@@ -243,6 +225,7 @@ ggplot(logs, aes(x = hora)) +
        title = "Distribución horaria de los registros") +
   theme_minimal()
 ```
+
 ## Detección y análisis de valores atípicos (Outliers)
 
 En el contexto de la Analítica del Aprendizaje, el volumen de actividad de un estudiante en el Aula Virtual rara vez sigue una distribución normal perfecta, ya que suele presentar una fuerte asimetría positiva. Por tanto, es fundamental identificar si existen usuarios con un comportamiento anómalo (*outliers*), ya sea por un exceso de interacciones ("hiperactivos") o por un déficit preocupante ("inactivos").
@@ -317,14 +300,14 @@ ggplot(actividad_usuarios, aes(x = "", y = total_interacciones)) +
 
 
 
-# Preguntas.
+# Resultados: Respuesta a las Preguntas de Investigación
 
 -   ¿En qué días de la semana y franjas horarias se concentran los mayores picos de actividad de los alumnos?
 
 -   ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
 
 -   ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
-```{r}
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
 # 1. Filtramos solo los eventos de entrega de Tareas
 # Buscamos la acción donde el alumno realmente envía el trabajo
@@ -388,7 +371,7 @@ ggplot(resumen_antelacion, aes(x = perfil_entrega, y = porcentaje, fill = perfil
 ```
 
 -   ¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana o festivos?
-```{r}
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
 # PREGUNTA: ¿Hay diferencias entre días laborables, fines de semana y festivos?
 
 # 1. INYECCIÓN DE CONTEXTO: Definimos los festivos oficiales (Calendario UV 2025)
@@ -469,4 +452,6 @@ ggplot(comparativa, aes(x = tipo_recurso, fill = tipo_recurso)) +
   theme(legend.position = "none")
 ```
 
+# Discusión de los resultados
 
+# Conclusiones
