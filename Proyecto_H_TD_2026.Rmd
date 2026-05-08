@@ -50,15 +50,31 @@ language:
     remark: 'Nota: '
     solution: 'Solución. '
 ---
-**Simple Summary:** En este proyecto, analizaremos un conjunto de datos real el cual corresponde a los registros de actividad de la asignatura "Tratamiento de Datos" del curso 2024-2025. El trabajo se centra en transformar los datos brutos en información útil, para poder ver como interactúan los estudiantes con los materiales del curso.
+**Simple Summary:** Este proyecto analiza cómo los estudiantes de Ciencia de Datos interactúan con el Aula Virtual en la asignatura "Tratamiento de Datos". Al estudiar su rastro digital (clics), hemos identificado los horarios preferidos de estudio, si los alumnos dejan las tareas para el último momento y si prefieren trabajar desde el campus o desde casa. El objetivo final es proporcionar a los profesores una herramienta visual que les ayude a entender mejor las necesidades del grupo y mejorar la organización de la asignatura.
 
-**Abstract:** Este trabajo aborda la Fase1 del análisis de los registros de Moodle de la asignatura "Tratamiento de Datos". Nuestro objetivo principal ha sido el procesamiento del dataset proporcionado mediante R, en donde nos hemos centrado en su limpieza de los registros y la estructura de las variables. A parte, con los graficos podemos ver los primeros patrones en el comportamiento de los alumnos.
+**Abstract:** En el marco de la Analítica del Aprendizaje (Learning Analytics), este trabajo presenta un flujo de trabajo completo en R para el análisis de los registros de actividad (logs) de Moodle durante el curso 2024-2025. La metodología incluye el preprocesamiento de datos con tidyverse, la gestión temporal con lubridate y la detección de valores atípicos (outliers) mediante el método del Rango Intercuartílico (IQR). Los resultados revelan una marcada tendencia a la procrastinación en las entregas del Miniproyecto y una diferencia estadística significativa entre la actividad en días lectivos y festivos. El análisis permite segmentar perfiles de estudiantes (constantes vs. de último minuto) y demuestra que la minería de datos educativos es fundamental para la intervención pedagógica temprana.
 
 **Palabras clave:** Análisis, Moodle, R, limpieza de datos, Tratamiento de Datos.
 
 # Introduccion 
 
-El presente proyecto se centra en el análisis de los registros de actividad (logs) de la plataforma Moodle para la asignatura "Tratamiento de Datos" durante el curso académico 2024-2025. El objetivo principal es transformar estos datos en bruto en conocimiento accionable, permitiendo identificar patrones de estudio, niveles de participación y la eficacia de los recursos didácticos ofrecidos. A través de este análisis exploratorio, buscamos responder a preguntas clave sobre cómo y cuándo interactúan los estudiantes con el entorno virtual de aprendizaje.
+La digitalización de la enseñanza superior ha transformado las plataformas de aprendizaje virtual, como Moodle, en fuentes masivas de datos. Cada interacción de un estudiante genera un registro que, analizado correctamente, puede revelar patrones de comportamiento invisibles a simple vista.
+
+Este proyecto surge de la necesidad de aplicar técnicas de Ciencia de Datos sobre el conjunto de registros de la asignatura "Tratamiento de Datos" de la Universitat de València. El propósito no es solo limpiar y organizar la información, sino realizar un Análisis Exploratorio de Datos (AED) profundo que nos permita comprender la dinámica del curso durante el segundo cuatrimestre.
+
+Para alcanzar este objetivo, el presente trabajo se estructura en torno a la resolución de las siguientes preguntas de investigación:
+
+-   ¿En qué días de la semana y franjas horarias se concentran los mayores picos de actividad de los alumnos?
+
+-   ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
+
+-   ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
+
+-   ¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana o festivos?
+
+-   ¿Qué porcentaje de la actividad se realiza en la ETSE y qué porcentaje se realiza fuera de esta?
+
+-   ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
 
 # Importación y limpieza de datos. 
 
@@ -181,6 +197,73 @@ ggplot(logs, aes(x = hora)) +
   theme_minimal()
 ```
 # Outliers
+
+```{r analisis-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución del volumen de actividad por usuario."}
+
+# 1. Calculamos el total de interacciones (clics) por usuario
+actividad_usuarios <- logs %>%
+  group_by(usuario) %>%
+  summarise(total_interacciones = n()) %>%
+  ungroup()
+
+# 2. Calculamos los cuartiles y límites para detectar outliers (Regla del 1.5 * IQR)
+Q1 <- quantile(actividad_usuarios$total_interacciones, 0.25)
+Q3 <- quantile(actividad_usuarios$total_interacciones, 0.75)
+IQR_val <- Q3 - Q1
+
+limite_superior <- Q3 + 1.5 * IQR_val
+limite_inferior <- Q1 - 1.5 * IQR_val
+
+# 3. Clasificamos a los usuarios según si son atípicos o no
+actividad_usuarios <- actividad_usuarios %>%
+  mutate(
+    perfil_actividad = case_when(
+      total_interacciones > limite_superior ~ "Atípico Alto (Hiperactivo)",
+      # Opcional: El límite inferior a veces es negativo en distribuciones asimétricas, 
+      # pero si hay usuarios muy por debajo de lo normal, saltarán aquí.
+      total_interacciones < limite_inferior ~ "Atípico Bajo (Inactivo)", 
+      TRUE ~ "Normal"
+    )
+  )
+
+# 4. Generamos una tabla resumen solo con los outliers encontrados
+tabla_outliers <- actividad_usuarios %>%
+  filter(perfil_actividad != "Normal") %>%
+  arrange(desc(total_interacciones))
+
+# Mostramos la tabla solo si hay outliers detectados
+if(nrow(tabla_outliers) > 0) {
+  knitr::kable(tabla_outliers, caption = "Listado de estudiantes con comportamiento atípico (Outliers).")
+} else {
+  print("No se han detectado valores atípicos con el método IQR.")
+}
+
+# 5. Visualización mediante un Boxplot combinado con un Jitter (puntos)
+ggplot(actividad_usuarios, aes(x = "", y = total_interacciones)) +
+  # Dibujamos la caja (Boxplot)
+  geom_boxplot(fill = "#E6F5C9", color = "darkgreen", width = 0.5,
+               outlier.shape = NA) + # Ocultamos los outliers base para no duplicarlos con el jitter
+  # Superponemos los puntos de todos los alumnos
+  geom_jitter(aes(color = perfil_actividad), width = 0.1, alpha = 0.7, size = 2) +
+  # Pintamos de rojo los outliers y de gris los normales
+  scale_color_manual(values = c("Atípico Alto (Hiperactivo)" = "red",
+                                "Atípico Bajo (Inactivo)" = "blue",
+                                "Normal" = "darkgray")) +
+  # Añadimos líneas punteadas para marcar los límites estadísticos
+  geom_hline(yintercept = limite_superior, linetype = "dashed", color = "red", alpha = 0.5) +
+  labs(title = "Detección de Outliers en la actividad de los estudiantes",
+       subtitle = paste("Límite superior estadístico (línea roja):", round(limite_superior, 1), "clics"),
+       x = "",
+       y = "Total de interacciones (clics)") +
+  theme_minimal() +
+  theme(legend.position = "bottom", 
+        legend.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+```
+
+
 
 # Preguntas.
 
@@ -314,8 +397,6 @@ ggplot(actividad_calendario, aes(x = tipo_dia, y = interacciones, fill = tipo_di
 ```
 
 -   ¿Qué porcentaje de la actividad se realiza en la ETSE y qué porcentaje se realiza fuera de esta?
-
--   ¿Se registra más actividad en las tardes de los días con clase o en los días sin clase de tratamiento de datos?
 
 -   ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
 
