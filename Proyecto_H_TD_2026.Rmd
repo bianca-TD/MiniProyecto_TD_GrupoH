@@ -3,18 +3,18 @@ title: "ProyectoTD2026"
 author: "GrupoH"
 date: "`r Sys.Date()`"
 output:
+  bookdown::pdf_document2:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    figure_caption: "Figura" # Referencias en castellano
+    table_caption: "Tabla"
   bookdown::html_document2:
     echo: true
     number_sections: true
     theme: spacelab
     toc: true
     figure_caption: "Figura"
-    table_caption: "Tabla"
-  bookdown::pdf_document2:
-    toc: true
-    toc_depth: 3
-    number_sections: true
-    figure_caption: "Figura" # Referencias en castellano
     table_caption: "Tabla"
   html_notebook:
     echo: true
@@ -180,12 +180,13 @@ ggplot(logs, aes(x = hora)) +
        title = "Distribución horaria de los registros") +
   theme_minimal()
 ```
+# Outliers
 
 # Preguntas.
 
--   ¿ En qué días de la semana hay más picos de actividad?
+-   ¿En qué días de la semana y franjas horarias se concentran los mayores picos de actividad de los alumnos?
 
--   ¿Cuáles son las horas a las que prefieren estudiar los alumnos de "Tratamiento de datos"?
+-   ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
 
 -   ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
 ```{r}
