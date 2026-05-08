@@ -58,11 +58,15 @@ language:
 
 # Introduccion 
 
+## Contexto del proyecto 
+
 La digitalización de la enseñanza superior ha transformado las plataformas de aprendizaje virtual, como Moodle, en fuentes masivas de datos. Cada interacción de un estudiante genera un registro que, analizado correctamente, puede revelar patrones de comportamiento invisibles a simple vista.
 
 Este proyecto surge de la necesidad de aplicar técnicas de Ciencia de Datos sobre el conjunto de registros de la asignatura "Tratamiento de Datos" de la Universitat de València. El propósito no es solo limpiar y organizar la información, sino realizar un Análisis Exploratorio de Datos (AED) profundo que nos permita comprender la dinámica del curso durante el segundo cuatrimestre.
 
-Para alcanzar este objetivo, el presente trabajo se estructura en torno a la resolución de las siguientes preguntas de investigación:
+## Preguntas de investigación
+
+Para alcanzar el objetivo establecido, el trabajo se estructura en torno a la resolución de las siguientes preguntas de investigación:
 
 -   ¿En qué días de la semana y franjas horarias se concentran los mayores picos de actividad de los alumnos?
 
