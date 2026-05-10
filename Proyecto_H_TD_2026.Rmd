@@ -92,7 +92,7 @@ library(tidyverse)
 library(lubridate)  
 
 
-logs <- read_csv("data/logs_moodle_anon.csv")
+logs <- read_csv("logs_moodle_anon.csv.zip")
 
 
 
@@ -118,7 +118,7 @@ logs <- logs %>%
   mutate(
     fecha = as.Date(fecha_hora),
     hora = hour(fecha_hora),
-    dia_semana = wday(fecha_hora, label = TRUE, abbr = FALSE),
+    dia_semana = wday(fecha_hora, label = TRUE, abbr = FALSE, week_start = 1),
     mes = month(fecha_hora, label = TRUE)
   )
 
@@ -302,6 +302,32 @@ ggplot(actividad_usuarios, aes(x = "", y = total_interacciones)) +
 
 # Resultados: Respuesta a las Preguntas de Investigación
 
+- ¿ En qué días de la semana hay más picos de actividad?
+```{r}
+
+actividad_semanal <- logs %>%
+  group_by(dia_semana) %>%
+  summarise(total_clics = n()) %>%
+  mutate(porcentaje = round((total_clics / sum(total_clics)) * 100, 1))
+
+#Tabla con resultados
+knitr::kable(actividad_semanal, 
+             caption = "Distribución del volumen de actividad por día de la semana.")
+
+#Gráfico
+ggplot(actividad_semanal, aes(x = dia_semana, y = total_clics, fill = dia_semana)) +
+  geom_col(color = "black", alpha = 0.7) +
+  geom_text(aes(label = paste0(porcentaje, "%")), vjust = -0.5, size = 3.5) +
+  scale_fill_brewer(palette = "Set3") + 
+  labs(title = "Picos de actividad según el día de la semana",
+       subtitle = "Análisis basado en el volumen total de interacciones",
+       x = "Día de la semana",
+       y = "Número total de registros") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+
 -   ¿En qué días de la semana y franjas horarias se concentran los mayores picos de actividad de los alumnos?
 
 -   ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
@@ -453,5 +479,17 @@ ggplot(comparativa, aes(x = tipo_recurso, fill = tipo_recurso)) +
 ```
 
 # Discusión de los resultados
+-A partir del análisis visual de la distribución de registros por día de la semana podemos deducir que:
+
+* **Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miercoles con un 23.3% ** y el **viernes con un 20.4%**. Estos picos nos pueden insinuar que los miercoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
+
+* **Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.3%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra el **89.8%** de toda la actividad semanal.
+
+
 
 # Conclusiones
+
+
+
+
+
