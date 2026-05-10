@@ -326,6 +326,58 @@ ggplot(actividad_semanal, aes(x = dia_semana, y = total_clics, fill = dia_semana
   theme_minimal() +
   theme(legend.position = "none")
 ```
+-   ¿Cuáles son las horas a las que prefieren estudiar los alumnos de "Tratamiento de datos"?
+```{r}
+actividad_horas <- logs %>%
+  group_by(hora) %>%
+  summarise(total_clics = n()) %>%
+  mutate(porcentaje = round((total_clics / sum(total_clics)) * 100, 1))
+
+#Creamos un gráfico de líneas 
+ggplot(actividad_horas, aes(x = hora, y = total_clics)) +
+  geom_line(color = "darkorange", size = 1) +
+  geom_point(color = "darkorange", size = 2) +
+  geom_area(fill = "orange", alpha = 0.2) +
+  scale_x_continuous(breaks = 0:23) +
+  labs(title = "Distribución de la actividad por franjas horarias",
+       subtitle = "Identificación de los hábitos de estudio del grupo",
+       x = "Hora del día ( 24h)",
+       y = "Número total de interacciones") +
+  theme_minimal()
+```
+
+```{r}
+#Definimos los dos periodos a comparar
+logs_comparativa_examenes <- logs %>%
+  mutate(periodo = case_when(
+    fecha >= as.Date("2025-05-15") & fecha <= as.Date("2025-06-15") ~ "Época de Exámenes",
+    fecha >= as.Date("2025-02-01") & fecha <= as.Date("2025-05-14") ~ "Periodo Lectivo (Clases)",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(periodo))
+
+# 2. Calculamos porcentajes por hora para cada periodo
+actividad_comparada <- logs_comparativa_examenes %>%
+  group_by(periodo, hora) %>%
+  summarise(total_clics = n(), .groups = "drop") %>%
+  group_by(periodo) %>%
+  mutate(porcentaje_hora = (total_clics / sum(total_clics)) * 100)
+
+# 3. Gráfico de comparación
+ggplot(actividad_comparada, aes(x = hora, y = porcentaje_hora, color = periodo, fill = periodo)) +
+  geom_line(size = 1.2) +
+  geom_area(alpha = 0.2, position = "identity") +
+  scale_x_continuous(breaks = 0:23) +
+  scale_color_manual(values = c("Época de Exámenes" = "#E41A1C", "Periodo Lectivo (Clases)" = "#377EB8")) +
+  scale_fill_manual(values = c("Época de Exámenes" = "#E41A1C", "Periodo Lectivo (Clases)" = "#377EB8")) +
+  labs(title = "¿Cambian las horas de estudio en exámenes?",
+       subtitle = "Comparativa de densidad de actividad horaria (Mayo-Junio vs Resto del curso)",
+       x = "Hora del día (24h)",
+       y = "Densidad de actividad (%)",
+       color = "Periodo:", fill = "Periodo:") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
 
 
 -   ¿En qué días de la semana y franjas horarias se concentran los mayores picos de actividad de los alumnos?
@@ -485,7 +537,16 @@ ggplot(comparativa, aes(x = tipo_recurso, fill = tipo_recurso)) +
 
 * **Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.3%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra el **89.8%** de toda la actividad semanal.
 
+-Ahora, para la pregunta de las horas:
+* **Pico de máxima actividad:** Este podemos ver que alcanza a las 9:00 que es la hora a la que empiezan las clases de por la mañana y se mantine con muy poca bajada hasta las 11:00 hora en que la primera clase acaba.
 
+* **Bajada de medio dia:** A parte podemos ver, que sobre las 15 hay una bajada bastante grande de actividad la cual podemos entender por ser horas en dond elos alumnos estaran saliendo de clase, comiendo y descaqnsanso.
+
+* **Periodo de tarde:** más tarde a partir de las 17:00 podemos ver como aumentan las entradas a "Tratamiento de datos" de forma moderada horas que seguramente usan los estudiantes ya para estudiar.
+
+* **Periodo de inactividad:**Y ya vemos una inactividad a las horas de madrugada que relacionamos con las horas de sueño de los estudiantes.
+
+* **Comparacion con época de éxamenes:** A partir de la pregunta de las horas durante el curso, nos hemosa interesado en si la inactividad nocturna al ser epoca de examenes aumentaria por lo que hemos creado uan nueva grafica comparando estos dos periodos. Aquí, podemos ver como en epoca de examenes hay una subida de registros a partir de las 22 de la noche que se mantiene hasta mas o emnos las 2 de la mañana , en dodne podemos ver como los alumnos aumentan las horas de estudio hasta altas horas de la noche.
 
 # Conclusiones
 
