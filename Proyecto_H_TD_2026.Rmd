@@ -380,8 +380,6 @@ ggplot(actividad_comparada, aes(x = hora, y = porcentaje_hora, color = periodo, 
 ```
 
 
--   ¿En qué días de la semana y franjas horarias se concentran los mayores picos de actividad de los alumnos?
-
 -   ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
 
 -   ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
