@@ -8,3 +8,4 @@ data/*.csv
 # Archivos locales de RStudio
 .Rhistory
 .Rproj.user/
+.positai
