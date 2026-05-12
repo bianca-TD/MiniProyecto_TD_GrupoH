@@ -145,8 +145,6 @@ logs <- logs %>%
 
 n_filas_final <- nrow(logs)
 
-
-head(logs)
 ```
 
 # Análisis y visualización de datos.
@@ -160,7 +158,7 @@ Tras ejecutar el proceso de limpieza y la creación de nuevas variables temporal
 A continuación, en la Tabla \@ref(tab:resumen-dataset) se exponen las métricas generales que dimensionan el ecosistema de la asignatura, mostrando la cantidad de alumnos implicados y la diversidad de acciones que pueden realizar.
 
 
-```{r resumen-dataset, echo = FALSE, warning = FALSE, message = FALSE}
+```{r resumen-dataset, echo = FALSE, warning = FALSE, message = FALSE, fig.cap="Métricas generales de dataset."}
 
 resumen <- data.frame(
   `Métrica` = c("Total de registros (limpios)", 
@@ -177,7 +175,7 @@ knitr::kable(resumen, caption = "Resumen estructural del conjunto de datos.")
 ```
 Para garantizar la reproducibilidad y la correcta interpretación de los análisis posteriores, es indispensable documentar el estado final de las características del dataframe. El Diccionario de Datos resultante, donde se especifican los tipos (como Factor o POSIXct), se presenta en la Tabla \@ref(tab:diccionario-datos).
 
-```{r diccionario-datos, echo = FALSE, warning = FALSE, message = FALSE}
+```{r diccionario-datos, echo = FALSE, warning = FALSE, message = FALSE, fig.cap="Explicación de nuestras variables."}
 
 # Creamos el dataframe con las 13 variables actuales
 diccionario_final <- data.frame(
@@ -306,7 +304,7 @@ La segunda explicación que se nos ha ocurrido es que es muy probable que no sea
 La principal conclusión que extraemos de esta fase del Análisis Exploratorio es que los datos de Moodle "en crudo" contienen ruido. Desde la perspectiva de la Ciencia de Datos, la detección de este tipo de perfiles hiperactivos extremos es vital. Si estuviéramos calculando la media matemática de clics de la clase para evaluar el rendimiento general, este único alumno distorsionaría por completo el resultado, subiendo la media artificialmente. Por tanto, aislar a estos estudiantes en nuestro análisis nos permite tener una visión mucho más realista de cómo se comporta el 99% restante de la clase.
 
 
-Para tener un mayor control sobre estos casos aislados, en \@ref(tab:tabla-outliers) detallamos exactamente cuántos clics han realizado los estudiantes identificados como atípicos.
+Para tener un mayor control sobre estos casos aislados, en la Tabla \@ref(tab:tabla-outliers) detallamos exactamente cuántos clics han realizado los estudiantes identificados como atípicos.
 
 
 ```{r tabla-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Estudiantes clasificados con un comportamiento atípico."}
@@ -331,15 +329,8 @@ Aunque el método estadístico IQR ha detectado múltiples valores atípicos, es
 
 Por un lado, los valores atípicos inferiores (alumnos con muy pocos clics) representan una realidad común en el ámbito universitario: el abandono de la asignatura. Estos registros son reales y no distorsionan el comportamiento de estudio. Del mismo modo, los alumnos levemente hiperactivos representan perfiles de alta implicación que también enriquecen el análisis.
 
-Para determinar si los alumnos hiperactivos són bots o simplemente alumnos muy estudiosos y que durante todo el curso, dia tras dia se meten en el aula virtual, representamos la distribución de sus clics en la \@ref(fig:comport-hip)
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-logs %>%
-  # Filtramos directamente por su nombre exacto
-  filter(usuario == "U0006") %>% 
-  count(fecha) %>%
-  arrange(desc(n)) %>%
-  head(10)
-```
+Para determinar si los alumnos hiperactivos són bots o simplemente alumnos muy estudiosos y que durante todo el curso, dia tras dia se meten en el aula virtual, representamos la distribución de sus clics en la Figura\@ref(fig:comport-hip)
+
 ```{r comport-hip, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Análisis de comportamiento: Usuarios Hiperactivos."}
 
 # 1. Sacamos la lista de los usuarios que hemos clasificado como hiperactivos
@@ -379,47 +370,8 @@ ggplot(evolucion_hiperactivos, aes(x = fecha, y = clics_diarios, color = usuario
 
 Consideramos que es imposible realizar 2000 o 200 clics al dia, a no ser que se trate de un profesor poniendo notas, por ejemplo. Por ello, eliminamos a estos usuarios del nuestro banco de datos para que no generar resultados sesgados.
 
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-
-# 1. Guardamos los nombres de los hiperactivos
-los_hiperactivos <- actividad_usuario %>% 
-  filter(tipo == "Hiperactivo") %>% 
-  pull(usuario)
-
-# 2. Buscamos cuál fue el DÍA RÉCORD (el de más clics) de cada hiperactivo
-dia_record_por_usuario <- logs %>%
-  filter(usuario %in% los_hiperactivos) %>%
-  count(usuario, fecha, name = "clics_totales") %>%
-  group_by(usuario) %>%
-  slice_max(clics_totales, n = 1) %>% # Nos quedamos con el mejor día de cada uno
-  ungroup()
-
-# 3. Cruzamos (inner_join) los logs originales con ese día récord 
-# y contamos qué eventos hicieron ese día concreto
-datos_pico <- logs %>%
-  # Esto filtra los logs para dejar solo a esos usuarios en esas fechas exactas
-  inner_join(dia_record_por_usuario %>% select(usuario, fecha), 
-             by = c("usuario", "fecha")) %>%
-  count(usuario, evento) %>%
-  group_by(usuario) %>%
-  slice_max(n, n = 5) # Cogemos el Top 5 de eventos de ese día
-
-# 4. Dibujamos el gráfico
-ggplot(datos_pico, aes(x = evento, y = n, fill = evento)) +
-  geom_col() +
-  coord_flip() + # Barras horizontales
-  facet_wrap(~ usuario, scales = "free") + # Separamos por alumno
-  labs(
-    title = "¿Qué hicieron en su día de mayor actividad?",
-    subtitle = "Top 5 de eventos durante el día con el pico máximo de clics",
-    x = "", 
-    y = "Clics en ese día"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-
-```{r}
 # 1. Identificamos al usuario con actividad automatizada
 
 usuarios_anomalos <- actividad_usuario %>%
@@ -433,8 +385,11 @@ logs <- logs %>%
 
 # Resultados: Respuesta a las Preguntas de Investigación
 
-- ¿ En qué días de la semana hay más picos de actividad?
-```{r graf-dias, echo=FALSE, message=FALSE, warning=FALSE}
+## ¿ En qué días de la semana hay más picos de actividad?
+
+A partir del análisis visual de la distribución de registros por día de la semana  de la Figura \@ref(fig:graf-dias), y de la Tabla \@ref(tab:actividad_semanal), podemos deducir que:
+
+```{r graf-dias, echo=FALSE, message=FALSE, warning=FALSE,  fig.cap="Picos de actividad según el día de la semana"}
 
 actividad_semanal <- logs %>%
   group_by(dia_semana) %>%
@@ -458,14 +413,16 @@ ggplot(actividad_semanal, aes(x = dia_semana, y = total_clics, fill = dia_semana
   theme(legend.position = "none")
 
 ```
--A partir del análisis visual de la distribución de registros por día de la semana podemos deducir que:
 
-* **Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miercoles con un 23.3% ** y el **viernes con un 20.4%**. Estos picos nos pueden insinuar que los miercoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
+**Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miercoles con un 23.3% ** y el **viernes con un 20.4%**. Estos picos nos pueden insinuar que los miercoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
 
-* **Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.3%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra el **89.8%** de toda la actividad semanal.
+**Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.3%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra el **89.8%** de toda la actividad semanal.
 
--   ¿Cuáles son las horas a las que prefieren estudiar los alumnos de Tratamiento de datos?
-```{r graf-horas, echo=FALSE, message=FALSE, warning=FALSE}
+## ¿Cuáles son las horas a las que prefieren estudiar los alumnos de Tratamiento de datos?
+
+Como se puede observar en la Figura \@ref(fig:graf-horas) y en la Figura \@ref(fig:graf-horas-examentes), en cuanto a las horas:
+
+```{r graf-horas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución de la actividad por franjas horarias."}
 actividad_horas <- logs %>%
   group_by(hora) %>%
   summarise(total_clics = n()) %>%
@@ -484,7 +441,7 @@ ggplot(actividad_horas, aes(x = hora, y = total_clics)) +
   theme_minimal()
 ```
 
-```{r graf-horas-examentes, echo=FALSE, message=FALSE, warning=FALSE}
+```{r graf-horas-examentes, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparativa de densidad de franjas horarias examenes vs resto del curso."}
 #Definimos los dos periodos a comparar
 logs_comparativa_examenes <- logs %>%
   mutate(periodo = case_when(
@@ -517,152 +474,146 @@ ggplot(actividad_comparada, aes(x = hora, y = porcentaje_hora, color = periodo, 
   theme(legend.position = "bottom")
 ```
 
--En cuanto a las horas:
-* **Pico de máxima actividad:** Este podemos ver que alcanza a las 9:00 que es la hora a la que empiezan las clases de por la mañana y se mantine con muy poca bajada hasta las 11:00 hora en que la primera clase acaba.
 
-* **Bajada de medio dia:** A parte observamos, que sobre las 15 hay una bajada bastante grande de actividad la cual podemos entender por ser horas en dond elos alumnos estaran saliendo de clase, comiendo y descaqnsanso.
 
-* **Periodo de tarde:** más tarde a partir de las 17:00 podemos ver como aumentan las entradas a "Tratamiento de datos" de forma moderada horas que seguramente usan los estudiantes ya para estudiar.
+**Pico de máxima actividad:** Este podemos ver que alcanza a las 9:00 que es la hora a la que empiezan las clases de por la mañana y se mantine con muy poca bajada hasta las 11:00 hora en que la primera clase acaba.
 
-* **Periodo de inactividad:**Y ya vemos una inactividad a las horas de madrugada que relacionamos con las horas de sueño de los estudiantes.
+**Bajada de medio dia:** A parte observamos, que sobre las 15 hay una bajada bastante grande de actividad la cual podemos entender por ser horas en dond elos alumnos estaran saliendo de clase, comiendo y descaqnsanso.
 
-* **Comparacion con época de éxamenes:** A partir de la pregunta de las horas durante el curso, nos hemosa interesado en si la inactividad nocturna al ser epoca de examenes aumentaria por lo que hemos creado uan nueva grafica comparando estos dos periodos. Aquí, podemos ver como en epoca de examenes hay una subida de registros a partir de las 22 de la noche que se mantiene hasta mas o emnos las 2 de la mañana , en dodne podemos ver como los alumnos aumentan las horas de estudio hasta altas horas de la noche.
+**Periodo de tarde:** más tarde a partir de las 17:00 podemos ver como aumentan las entradas a "Tratamiento de datos" de forma moderada horas que seguramente usan los estudiantes ya para estudiar.
 
--   ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
+**Periodo de inactividad:**Y ya vemos una inactividad a las horas de madrugada que relacionamos con las horas de sueño de los estudiantes.
 
-```{r}
-# --- 1. INGENIERÍA DE CARACTERÍSTICAS (FEATURE ENGINEERING) ---
-# Creamos un resumen del comportamiento individual de cada estudiante
+**Comparacion con época de éxamenes:** A partir de la pregunta de las horas durante el curso, nos hemosa interesado en si la inactividad nocturna al ser epoca de examenes aumentaria por lo que hemos creado uan nueva grafica comparando estos dos periodos. Aquí, podemos ver como en epoca de examenes hay una subida de registros a partir de las 22 de la noche que se mantiene hasta mas o emnos las 2 de la mañana , en dodne podemos ver como los alumnos aumentan las horas de estudio hasta altas horas de la noche.
+
+## ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
+
+Para responder a la pregunta de si es posible agrupar a los alumnos según su uso del Aula Virtual, hemos realizado una segmentación basada en reglas lógicas. Hemos clasificado a los estudiantes comparando su actividad individual con el comportamiento general de la clase utilizando la mediana.
+
+Para ello, hemos calculado dos variables clave por cada estudiante: su constancia (días distintos que accede) y su volumen de trabajo (total de interacciones). Utilizando la mediana del grupo como punto de corte, hemos definido tres perfiles:
+
+Constantes: Alumnos que se conectan más días que la mediana de la clase.
+
+De Última Hora (Atracones): Alumnos que se conectan pocos días, pero acumulan un número de clics superior a la mediana (concentran mucho trabajo en poco tiempo).
+
+Baja Participación: Alumnos que están por debajo de la mediana tanto en días conectados como en clics totales.
+
+Como resultado nos ha salido la Figura \@ref(fig:perfiles-basicos)
+
+```{r perfiles-basicos, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución de los perfiles de estudiante."}
+
+# 1. Calculamos la actividad de cada estudiante
 datos_estudiantes <- logs %>%
   group_by(usuario) %>%
   summarise(
-    interacciones_totales = n(),
-    dias_distintos_activos = n_distinct(fecha),
-    # Actividad nocturna: % de clics entre las 22:00 y las 04:00
-    pct_actividad_nocturna = sum(hora >= 22 | hora <= 4) / n(),
-    # Actividad en fin de semana: % de clics en sábado (6) o domingo (7)
-    pct_fin_semana = sum(wday(fecha, week_start = 1) %in% c(6, 7)) / n()
-  ) %>%
-  # Filtramos posibles usuarios "fantasma" con una actividad residual o nula
-  filter(interacciones_totales > 5) 
-
-# --- 2. PREPARACIÓN DE DATOS PARA K-MEANS ---
-# Seleccionamos solo las variables numéricas y las estandarizamos (Escala Z).
-# Esto es vital: evita que la variable "interacciones" (que tiene miles) 
-# aplaste a las variables de "porcentajes" (que van de 0 a 1).
-datos_numericos <- datos_estudiantes %>% select(-usuario)
-datos_escalados <- scale(datos_numericos)
-
-# --- 3. APLICACIÓN DEL MODELO ---
-set.seed(2026) # Fijamos una semilla para garantizar la reproducibilidad
-num_clusters <- 4 # Definimos 4 grupos (puedes ajustar este número)
-
-modelo_kmeans <- kmeans(datos_escalados, centers = num_clusters, nstart = 25)
-
-# Añadimos la etiqueta del clúster al dataset original de estudiantes
-datos_estudiantes$cluster <- as.factor(modelo_kmeans$cluster)
-
-# --- 4. INTERPRETACIÓN DE LOS CENTROIDES ---
-# Calculamos la media de cada variable por clúster para entender su comportamiento
-resumen_perfiles <- datos_estudiantes %>%
-  group_by(cluster) %>%
-  summarise(
-    n_estudiantes = n(),
-    media_interacciones = round(mean(interacciones_totales), 0),
-    media_dias_activos = round(mean(dias_distintos_activos), 0),
-    media_pct_nocturno = round(mean(pct_actividad_nocturna) * 100, 1),
-    media_pct_finde = round(mean(pct_fin_semana) * 100, 1)
+    total_clics = n(),
+    dias_activos = n_distinct(fecha)
   )
 
-# --- 5. TABLA Y VISUALIZACIÓN ---
-# Mostramos la tabla resumen
-knitr::kable(resumen_perfiles, 
-             caption = "Características medias de los perfiles identificados por K-Means.",
-             col.names = c("Clúster", "Nº Estudiantes", "Media Interacciones", 
-                           "Media Días Activos", "% Nocturno", "% Fin de Semana"))
+# 2. Calculamos las medianas de la clase para usarlas como barrera
+mediana_clics <- median(datos_estudiantes$total_clics)
+mediana_dias <- median(datos_estudiantes$dias_activos)
 
-# Gráfico de dispersión para visualizar la segmentación
-ggplot(datos_estudiantes, aes(x = dias_distintos_activos, y = interacciones_totales, color = cluster)) +
-  geom_point(alpha = 0.7, size = 3) +
-  scale_color_brewer(palette = "Set1") +
-  labs(
-    title = "Segmentación de Perfiles de Estudiantes",
-    subtitle = "Agrupación K-Means según el patrón de uso del Aula Virtual",
-    x = "Constancia (Días distintos conectados)",
-    y = "Volumen de trabajo (Interacciones Totales)",
-    color = "Clúster asignado:"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
-
-
--   ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
-
-# 1. Filtramos solo los eventos de entrega de Tareas
-# Buscamos la acción donde el alumno realmente envía el trabajo
-entregas_reales <- logs %>%
-  filter(
-    componente == "Tarea", 
-    str_detect(evento, "entrega|Submission") # Filtra eventos que contengan la palabra "entrega" o "Submission"
-  )
-
-# 2. Inyectamos la fecha/hora exacta de cierre del Miniproyecto
-fecha_cierre_miniproyecto <- ymd_hms("2025-05-13 23:55:00") 
-
-# 3. Calculamos la diferencia en horas
-analisis_antelacion <- entregas_reales %>%
-  # Nos quedamos con las entregas de mayo (para aislar las del Miniproyecto)
-  filter(fecha >= as.Date("2025-05-01") & fecha_hora <= fecha_cierre_miniproyecto) %>%
-  # Nos quedamos con la última entrega de cada usuario por si la modificaron
-  group_by(usuario) %>%
-  filter(fecha_hora == max(fecha_hora)) %>%
-  ungroup() %>%
+# 3. Asignamos el perfil con reglas lógicas
+datos_estudiantes <- datos_estudiantes %>%
   mutate(
-    # Calculamos cuántas horas faltaban para el cierre
-    horas_antelacion = as.numeric(difftime(fecha_cierre_miniproyecto, fecha_hora, units = "hours")),
-    # Clasificamos al alumno
-    perfil_entrega = case_when(
-      horas_antelacion > 48 ~ "Con mucha antelación (>2 días)",
-      horas_antelacion > 24 & horas_antelacion <= 48 ~ "El día de antes",
-      horas_antelacion > 6 & horas_antelacion <= 24 ~ "El mismo día",
-      horas_antelacion <= 6 ~ "Último minuto (<6 horas)"
+    perfil = case_when(
+      dias_activos >= mediana_dias ~ "Constantes",
+      dias_activos < mediana_dias & total_clics >= mediana_clics ~ "De Última Hora (Atracones)",
+      dias_activos < mediana_dias & total_clics < mediana_clics ~ "Baja Participación"
     )
   )
 
-# 4. Tabla resumen de perfiles
-resumen_antelacion <- analisis_antelacion %>%
-  group_by(perfil_entrega) %>%
-  summarise(numero_alumnos = n()) %>%
-  mutate(porcentaje = round((numero_alumnos / sum(numero_alumnos)) * 100, 1)) %>%
-  arrange(desc(porcentaje))
+# 4. Contamos cuántos alumnos hay en cada perfil para hacer la gráfica
+resumen_perfiles <- datos_estudiantes %>%
+  count(perfil) %>%
+  mutate(porcentaje = round((n / sum(n)) * 100, 1))
 
-knitr::kable(resumen_antelacion, caption = "Clasificación de los alumnos según la antelación de entrega (Miniproyecto).")
-
-# 5. Gráfico de barras
-# Reordenamos los factores para que el gráfico tenga un orden lógico temporal
-resumen_antelacion$perfil_entrega <- factor(resumen_antelacion$perfil_entrega, 
-                                            levels = c("Con mucha antelación (>2 días)", 
-                                                       "El día de antes", 
-                                                       "El mismo día", 
-                                                       "Último minuto (<6 horas)"))
-
-ggplot(resumen_antelacion, aes(x = perfil_entrega, y = porcentaje, fill = perfil_entrega)) +
+# 5. Gráfico 
+ggplot(resumen_perfiles, aes(x = reorder(perfil, -n), y = n, fill = perfil)) +
   geom_col(color = "black", alpha = 0.8) +
-  geom_text(aes(label = paste0(porcentaje, "%")), vjust = -0.5, fontface = "bold") +
-  scale_fill_brewer(palette = "YlOrRd", direction = -1) + # Paleta que va de suave a rojo urgencia
-  labs(title = "¿Cuándo entregan el Miniproyecto los alumnos?",
-       subtitle = "Análisis de antelación respecto a la fecha límite",
-       x = "Momento de la entrega",
-       y = "Porcentaje de alumnos (%)") +
+  # Añadimos el número y el porcentaje encima de cada barra
+  geom_text(aes(label = paste0(n, " alums. (", porcentaje, "%)")), vjust = -0.5, fontface = "bold") +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(
+    title = "Segmentación de los estudiantes de la asignatura",
+    subtitle = paste0("Puntos de corte: Mediana de días (", mediana_dias, ") y Mediana de clics (", mediana_clics, ")"),
+    x = "Perfil detectado",
+    y = "Número de estudiantes"
+  ) +
   theme_minimal() +
-  theme(legend.position = "none",
-        axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(legend.position = "none")
 ```
 
--   ¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana o festivos?
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+El análisis revela que la clase está prácticamente polarizada en dos grandes mitades. Por un lado, el perfil mayoritario es el de alumnos Constantes (51.3%), lo que indica que casi la mitad del grupo (40 estudiantes) hace un seguimiento regular de la asignatura, conectándose de forma asidua durante el cuatrimestre. Por otro lado, encontramos una proporción casi idéntica de alumnos con Baja Participación (41%), un dato que podría resultar de gran interés para el equipo docente, ya que engloba a 32 estudiantes que interactúan poco con los materiales y podrían estar en riesgo de abandonar la asignatura.
+
+Finalmente, resulta muy revelador haber identificado a 6 estudiantes (7.7%) en el perfil "De Última Hora". Esta métrica confirma empíricamente la existencia de un pequeño grupo de alumnos que prefiere no entrar al Aula Virtual durante semanas para, posteriormente, realizar picos masivos de interacciones (atracones de estudio) justo antes de las entregas o los exámenes.
+
+
+## ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
+\@ref(fig:antelacion-entregas)
+
+Una de las métricas más interesantes para entender los hábitos de estudio del alumnado es su grado de planificación frente a las fechas límite. Al calcular la diferencia en horas entre el último archivo enviado por cada estudiante y la hora de cierre del Miniproyecto, los resultados revelan una alarmante tendencia hacia la procrastinación extrema.
+
+La fecha de cierre del Miniproyecto la hemos sacado de el curso archivado 2024-2025 de una estudiante.
+
+Como se puede observar en la gráfica, la opción absolutamente mayoritaria es entregar el trabajo en el último minuto (50.4%), es decir, con menos de 6 horas de margen respecto al cierre de la plataforma. Si a esto le sumamos el 14.3% que entrega durante ese mismo día y el 15.8% que lo hace el día de antes, comprobamos que más del 80% de la clase concentra el envío de su proyecto en las últimas 48 horas. Por el contrario, aproximadamente uno de cada cinco estudiantes (19.5%) demuestra una alta planificación, realizando la entrega con más de dos días de antelación.
+
+Estos datos confirman de forma rotunda el perfil del "estudio por atracón" que ya habíamos detectado al segmentar a los estudiantes. Desde un punto de vista técnico, que la mitad exacta de la clase intente subir sus archivos al Aula Virtual en la misma franja de 6 horas es un dato crítico. Esta métrica explica por qué los servidores de la universidad experimentan ralentizaciones y caídas durante los días de entrega.
+```{r antelacion-entregas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Antelación en la entrega del Miniproyecto."}
+
+# 1. Filtramos para quedarnos SOLO con las entregas de Tareas en mayo
+entregas_mayo <- logs %>%
+  filter(componente == "Tarea") %>%
+  filter(fecha >= as.Date("2025-05-01") & fecha <= as.Date("2025-05-13"))
+
+# 2. Si un alumno entregó varias veces, nos quedamos solo con la última vez
+ultima_entrega <- entregas_mayo %>%
+  group_by(usuario) %>%
+  filter(fecha_hora == max(fecha_hora)) %>%
+  ungroup()
+
+# 3. Definimos a qué hora se cerraba la entrega
+fecha_limite <- as.POSIXct("2025-05-13 23:55:00")
+
+# 4. Calculamos el tiempo de margen y clasificamos
+clasificacion_entregas <- ultima_entrega %>%
+  mutate(
+    horas_margen = as.numeric(difftime(fecha_limite, fecha_hora, units = "hours")),
+    perfil_entrega = case_when(
+      horas_margen > 48 ~ "1. Con mucha antelación (>2 días)",
+      horas_margen > 24 & horas_margen <= 48 ~ "2. El día de antes",
+      horas_margen > 6 & horas_margen <= 24 ~ "3. El mismo día",
+      horas_margen <= 6 ~ "4. Último minuto (<6 horas)"
+    )
+  )
+
+# 5. Hacemos el recuento para la gráfica
+resumen_antelacion <- clasificacion_entregas %>%
+  count(perfil_entrega, name = "numero_alumnos") %>%
+  mutate(porcentaje = round((numero_alumnos / sum(numero_alumnos)) * 100, 1))
+
+# 6. Gráfica básica y clara
+ggplot(resumen_antelacion, aes(x = perfil_entrega, y = porcentaje, fill = perfil_entrega)) +
+  geom_col(color = "black", alpha = 0.8) +
+  # Ponemos el % encima de la barra
+  geom_text(aes(label = paste0(porcentaje, "%")), vjust = -0.5) +
+  labs(
+    title = "¿Con cuánta antelación entregan el Miniproyecto?",
+    x = "Momento de la entrega",
+    y = "Porcentaje de alumnos (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none", # Quitamos la leyenda lateral
+    axis.text.x = element_text(angle = 15, hjust = 1) # Giramos un poco el texto para que quepa
+  )
+```
+
+## ¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana o festivos?
+\@ref(fig:normal-fiesta)
+
+```{r normal-fiesta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Actividad de los alumnos: días sin universidad vs días laborables"}
 # PREGUNTA: ¿Hay diferencias entre días laborables, fines de semana y festivos?
 
 # 1. INYECCIÓN DE CONTEXTO: Definimos los festivos oficiales (Calendario UV 2025)
@@ -722,11 +673,17 @@ ggplot(actividad_calendario, aes(x = tipo_dia, y = interacciones, fill = tipo_di
   theme(legend.position = "none")
 ```
 
--   ¿Qué porcentaje de la actividad se realiza en la ETSE y qué porcentaje se realiza fuera de esta?
+## ¿Qué porcentaje de la actividad se realiza en la ETSE y qué porcentaje se realiza fuera de esta?
+\@ref(fig:dentro-fuera)
 
--   ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
+```{r dentro-fuera, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Porcentaje de actividad dentro de la ETSE vs fuera."}
 
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
+```
+
+## ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
+\@ref(fig:tareas-apuntes)
+
+```{r tareas-apuntes, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Actividad de tareas vs apuntes."}
 
 # Filtramos los componentes que representan tareas y apuntes
 comparativa <- logs %>%
