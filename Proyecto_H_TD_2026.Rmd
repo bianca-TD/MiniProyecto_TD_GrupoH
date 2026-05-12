@@ -92,8 +92,7 @@ library(tidyverse)
 library(lubridate)  
 
 
-logs <- read_csv("logs_moodle_anon.csv.zip")
-
+logs <- read_csv("data/logs_moodle_anon.csv")
 
 
 # Renombrado de variables 
@@ -147,7 +146,7 @@ logs <- logs %>%
 n_filas_final <- nrow(logs)
 
 
-
+head(logs)
 ```
 
 # Análisis y visualización de datos.
@@ -228,82 +227,214 @@ ggplot(logs, aes(x = hora)) +
 
 ## Detección y análisis de valores atípicos (Outliers)
 
-En el contexto de la Analítica del Aprendizaje, el volumen de actividad de un estudiante en el Aula Virtual rara vez sigue una distribución normal perfecta, ya que suele presentar una fuerte asimetría positiva. Por tanto, es fundamental identificar si existen usuarios con un comportamiento anómalo (*outliers*), ya sea por un exceso de interacciones ("hiperactivos") o por un déficit preocupante ("inactivos").
+Cuando analizamos los datos del Aula Virtual, nos damos cuenta de que no todos los alumnos usan la plataforma de la misma manera. Mientras que la mayoría mantiene un ritmo de trabajo parecido, siempre hay estudiantes que interactúan muchísimo más de lo normal, o por el contrario, muy por debajo de la media.
 
-Para llevar a cabo esta detección de forma robusta, hemos aplicado el método no paramétrico del **Rango Intercuartílico (IQR)** sobre el volumen total de clics por usuario. Este método define como atípico cualquier valor que se aleje 1.5 veces el tamaño del IQR por encima del tercer cuartil ($Q_3$) o por debajo del primer cuartil ($Q_1$).
+Para identificar matemáticamente a estos estudiantes con comportamientos extremos, hemos sumado el número total de interacciones (clics) que ha hecho cada alumno durante el cuatrimestre y hemos aplicado el método estadístico del Rango Intercuartílico (IQR).
 
-El siguiente bloque de código calcula estos límites estadísticos, aísla a los estudiantes con comportamiento extremo en la Tabla \@ref(tab:analisis-outliers) y proyecta visualmente la distribución de toda la clase en la Figura \@ref(fig:analisis-outliers).
+Este método nos permite calcular unos límites matemáticos para definir qué es un comportamiento normal y qué se sale de lo común. En base a esto, hemos clasificado a los estudiantes en tres perfiles:
+
+**Hiperactivos**: Aquellos que superan el límite superior, es decir, interactúan con la plataforma mucho más que el resto de la clase.
+
+**Inactivos extremos**: Aquellos que se quedan por debajo del límite inferior.
+
+**Normales**: El estandar de la clase, que se mueve dentro de los límites esperados.
+
+La Figura \@ref(fig:analisis-outliers) muestra la distribución de la actividad por estudiante mediante un diagrama de caja (boxplot), acompañado de los puntos individuales correspondientes a cada usuario.
+
 ```{r analisis-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución del volumen de actividad por usuario."}
 
-# 1. Calculamos el total de interacciones (clics) por usuario
-actividad_usuarios <- logs %>%
-  group_by(usuario) %>%
-  summarise(total_interacciones = n()) %>%
-  ungroup()
+# 1. Agregamos la actividad por estudiante
+actividad_usuario <- logs %>%
+  count(usuario, name = "num_registros")
 
-# 2. Calculamos los cuartiles y límites para detectar outliers (Regla del 1.5 * IQR)
-Q1 <- quantile(actividad_usuarios$total_interacciones, 0.25)
-Q3 <- quantile(actividad_usuarios$total_interacciones, 0.75)
-IQR_val <- Q3 - Q1
+# 2. Calculamos los cuartiles y el rango intercuartílico (IQR)
+Q1 <- quantile(actividad_usuario$num_registros, 0.25)
+Q3 <- quantile(actividad_usuario$num_registros, 0.75)
+IQR_val <- IQR(actividad_usuario$num_registros)
 
-limite_superior <- Q3 + 1.5 * IQR_val
+# 3. Definimos los límites (Thresholds)
 limite_inferior <- Q1 - 1.5 * IQR_val
+limite_superior <- Q3 + 1.5 * IQR_val
 
-# 3. Clasificamos a los usuarios según si son atípicos o no
-actividad_usuarios <- actividad_usuarios %>%
+# 4. Clasificamos a los estudiantes según su volumen de clics
+actividad_usuario <- actividad_usuario %>%
   mutate(
-    perfil_actividad = case_when(
-      total_interacciones > limite_superior ~ "Atípico Alto (Hiperactivo)",
-      # Opcional: El límite inferior a veces es negativo en distribuciones asimétricas, 
-      # pero si hay usuarios muy por debajo de lo normal, saltarán aquí.
-      total_interacciones < limite_inferior ~ "Atípico Bajo (Inactivo)", 
+    tipo = case_when(
+      num_registros < limite_inferior ~ "Inactivo extremo",
+      num_registros > limite_superior ~ "Hiperactivo",
       TRUE ~ "Normal"
     )
   )
 
-# 4. Generamos una tabla resumen solo con los outliers encontrados
-tabla_outliers <- actividad_usuarios %>%
-  filter(perfil_actividad != "Normal") %>%
-  arrange(desc(total_interacciones))
+# Convertimos a factor con un orden lógico para que la leyenda quede bien
+actividad_usuario$tipo <- factor(actividad_usuario$tipo, 
+                                 levels = c("Normal", "Hiperactivo", "Inactivo extremo"))
 
-# Mostramos la tabla solo si hay outliers detectados
-if(nrow(tabla_outliers) > 0) {
-  knitr::kable(tabla_outliers, caption = "Listado de estudiantes con comportamiento atípico (Outliers).")
-} else {
-  print("No se han detectado valores atípicos con el método IQR.")
-}
-
-# 5. Visualización mediante un Boxplot combinado con un Jitter (puntos)
-ggplot(actividad_usuarios, aes(x = "", y = total_interacciones)) +
-  # Dibujamos la caja (Boxplot)
-  geom_boxplot(fill = "#E6F5C9", color = "darkgreen", width = 0.5,
-               outlier.shape = NA) + # Ocultamos los outliers base para no duplicarlos con el jitter
-  # Superponemos los puntos de todos los alumnos
-  geom_jitter(aes(color = perfil_actividad), width = 0.1, alpha = 0.7, size = 2) +
-  # Pintamos de rojo los outliers y de gris los normales
-  scale_color_manual(values = c("Atípico Alto (Hiperactivo)" = "red",
-                                "Atípico Bajo (Inactivo)" = "blue",
-                                "Normal" = "darkgray")) +
-  # Añadimos líneas punteadas para marcar los límites estadísticos
-  geom_hline(yintercept = limite_superior, linetype = "dashed", color = "red", alpha = 0.5) +
-  labs(title = "Detección de Outliers en la actividad de los estudiantes",
-       subtitle = paste("Límite superior estadístico (línea roja):", round(limite_superior, 1), "clics"),
-       x = "",
-       y = "Total de interacciones (clics)") +
+# 5. Gráfica 
+ggplot(actividad_usuario, aes(x = "Estudiantes", y = num_registros)) +
+  # Usamos outlier.shape = NA para que el boxplot no dibuje los outliers 
+  # (así evitamos que se dupliquen con los puntos de geom_jitter)
+  geom_boxplot(width = 0.3, fill = "lightblue", color = "darkblue", alpha = 0.6, outlier.shape = NA) +
+  # Añadimos los puntos de los estudiantes esparcidos horizontalmente
+  geom_jitter(aes(color = tipo), width = 0.15, size = 2.5, alpha = 0.7) +
+  scale_color_manual(values = c("Normal" = "#7F8C8D", "Hiperactivo" = "#E74C3C", "Inactivo extremo" = "#F1C40F")) +
+  labs(
+    title = "Detección de valores atípicos en la actividad estudiantil",
+    subtitle = "Identificación mediante el método del Rango Intercuartílico (IQR)",
+    x = "",
+    y = "Número total de interacciones",
+    color = "Clasificación:"
+  ) +
   theme_minimal() +
-  theme(legend.position = "bottom", 
-        legend.title = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold")
+  )
 
 ```
 
+Como se puede observar a simple vista en el gráfico, la gran mayoría de los alumnos (los puntos grises) se agrupan en la parte baja, dentro y cerca de la caja azul, representando el comportamiento normal del grupo.
 
+Sin embargo, lo que más llama la atención de esta visualización es la presencia de puntos rojos muy alejados del resto, en especial un estudiante (o pequeño grupo) situado en la parte más alta del gráfico, con un volumen de interacciones completamente desproporcionado respecto a sus compañeros.
+
+Como nos ha parecido un un caso ta extraño ya que la diferencia con la mayoria de estudiantes es abismal le hemos intentado dar dos explicaciones lógicas a este exceso masivo de clics:
+
+La primera se relaciona con un comportamiento humano inususal, podría tratarse de un alumno que utiliza el Aula Virtual como su única herramienta de consulta en tiempo real, abriendo y cerrando recursos compulsivamente en lugar de descargar los apuntes en su ordenador.
+
+La segunda explicación que se nos ha ocurrido es que es muy probable que no sean clics reales hechos a mano. Puede deberse a que el alumno haya dejado la pestaña de Moodle abierta con una extensión de navegador que recarga la página automáticamente (auto-refresh), o que haya utilizado algún script o bot para descargar todos los materiales de la asignatura de golpe.
+
+La principal conclusión que extraemos de esta fase del Análisis Exploratorio es que los datos de Moodle "en crudo" contienen ruido. Desde la perspectiva de la Ciencia de Datos, la detección de este tipo de perfiles hiperactivos extremos es vital. Si estuviéramos calculando la media matemática de clics de la clase para evaluar el rendimiento general, este único alumno distorsionaría por completo el resultado, subiendo la media artificialmente. Por tanto, aislar a estos estudiantes en nuestro análisis nos permite tener una visión mucho más realista de cómo se comporta el 99% restante de la clase.
+
+
+Para tener un mayor control sobre estos casos aislados, en \@ref(tab:tabla-outliers) detallamos exactamente cuántos clics han realizado los estudiantes identificados como atípicos.
+
+
+```{r tabla-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Estudiantes clasificados con un comportamiento atípico."}
+
+# Filtramos solo los estudiantes atípicos (Hiperactivos o Inactivos extremos)
+tabla_outliers <- actividad_usuario %>%
+  filter(tipo != "Normal") %>%
+  # Ordenamos de mayor a menor número de clics para ver a los más extremos primero
+  arrange(desc(num_registros)) %>%
+  # Renombramos las columnas para que queden bonitas en el PDF/HTML final
+  rename(
+    `Identificador (Usuario)` = usuario,
+    `Total de Clics` = num_registros,
+    `Perfil Asignado` = tipo
+  )
+
+knitr::kable(tabla_outliers, 
+             caption = "Detalle de los estudiantes clasificados con un comportamiento atípico.")
+```
+
+Aunque el método estadístico IQR ha detectado múltiples valores atípicos, es fundamental interpretar estos datos desde un punto de vista pedagógico antes de eliminarlos ciegamente.
+
+Por un lado, los valores atípicos inferiores (alumnos con muy pocos clics) representan una realidad común en el ámbito universitario: el abandono de la asignatura. Estos registros son reales y no distorsionan el comportamiento de estudio. Del mismo modo, los alumnos levemente hiperactivos representan perfiles de alta implicación que también enriquecen el análisis.
+
+Para determinar si los alumnos hiperactivos són bots o simplemente alumnos muy estudiosos y que durante todo el curso, dia tras dia se meten en el aula virtual, representamos la distribución de sus clics en la \@ref(fig:comport-hip)
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+logs %>%
+  # Filtramos directamente por su nombre exacto
+  filter(usuario == "U0006") %>% 
+  count(fecha) %>%
+  arrange(desc(n)) %>%
+  head(10)
+```
+```{r comport-hip, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Análisis de comportamiento: Usuarios Hiperactivos."}
+
+# 1. Sacamos la lista de los usuarios que hemos clasificado como hiperactivos
+usuarios_hiperactivos <- actividad_usuario %>%
+  filter(tipo == "Hiperactivo") %>%
+  pull(usuario)
+
+# 2. Filtramos los logs para quedarnos solo con ellos y contamos sus clics por día
+evolucion_hiperactivos <- logs %>%
+  filter(usuario %in% usuarios_hiperactivos) %>%
+  group_by(usuario, fecha) %>%
+  summarise(clics_diarios = n(), .groups = "drop")
+
+# 3. Creamos una gráfica dividida por usuario (facet_wrap)
+ggplot(evolucion_hiperactivos, aes(x = fecha, y = clics_diarios, color = usuario)) +
+  geom_line(size = 0.8) +
+  # Añadimos un punto en cada día para que se vean bien los días sueltos
+  geom_point(size = 1.5, alpha = 0.7) + 
+  # facet_wrap crea un recuadro individual para cada alumno
+  facet_wrap(~usuario, scales = "free_y") + 
+  scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+  labs(
+    title = "Análisis de comportamiento: Usuarios Hiperactivos",
+    subtitle = "Distribución temporal para diferenciar 'atracones' de estudio de la actividad automatizada",
+    x = "Mes del curso",
+    y = "Número de interacciones diarias"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.background = element_rect(fill = "lightgray", color = NA),
+    strip.text = element_text(face = "bold")
+  )
+```
+
+
+Consideramos que es imposible realizar 2000 o 200 clics al dia, a no ser que se trate de un profesor poniendo notas, por ejemplo. Por ello, eliminamos a estos usuarios del nuestro banco de datos para que no generar resultados sesgados.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+# 1. Guardamos los nombres de los hiperactivos
+los_hiperactivos <- actividad_usuario %>% 
+  filter(tipo == "Hiperactivo") %>% 
+  pull(usuario)
+
+# 2. Buscamos cuál fue el DÍA RÉCORD (el de más clics) de cada hiperactivo
+dia_record_por_usuario <- logs %>%
+  filter(usuario %in% los_hiperactivos) %>%
+  count(usuario, fecha, name = "clics_totales") %>%
+  group_by(usuario) %>%
+  slice_max(clics_totales, n = 1) %>% # Nos quedamos con el mejor día de cada uno
+  ungroup()
+
+# 3. Cruzamos (inner_join) los logs originales con ese día récord 
+# y contamos qué eventos hicieron ese día concreto
+datos_pico <- logs %>%
+  # Esto filtra los logs para dejar solo a esos usuarios en esas fechas exactas
+  inner_join(dia_record_por_usuario %>% select(usuario, fecha), 
+             by = c("usuario", "fecha")) %>%
+  count(usuario, evento) %>%
+  group_by(usuario) %>%
+  slice_max(n, n = 5) # Cogemos el Top 5 de eventos de ese día
+
+# 4. Dibujamos el gráfico
+ggplot(datos_pico, aes(x = evento, y = n, fill = evento)) +
+  geom_col() +
+  coord_flip() + # Barras horizontales
+  facet_wrap(~ usuario, scales = "free") + # Separamos por alumno
+  labs(
+    title = "¿Qué hicieron en su día de mayor actividad?",
+    subtitle = "Top 5 de eventos durante el día con el pico máximo de clics",
+    x = "", 
+    y = "Clics en ese día"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+```{r}
+# 1. Identificamos al usuario con actividad automatizada
+
+usuarios_anomalos <- actividad_usuario %>%
+  filter(num_registros > 2500	) %>%
+  pull(usuario)
+
+# 2. Creamos nuestro dataset limpio quitando SOLO a ese usuario
+logs <- logs %>%
+  filter(!usuario %in% usuarios_anomalos)
+```
 
 # Resultados: Respuesta a las Preguntas de Investigación
 
 - ¿ En qué días de la semana hay más picos de actividad?
-```{r}
+```{r graf-dias, echo=FALSE, message=FALSE, warning=FALSE}
 
 actividad_semanal <- logs %>%
   group_by(dia_semana) %>%
@@ -325,9 +456,16 @@ ggplot(actividad_semanal, aes(x = dia_semana, y = total_clics, fill = dia_semana
        y = "Número total de registros") +
   theme_minimal() +
   theme(legend.position = "none")
+
 ```
--   ¿Cuáles son las horas a las que prefieren estudiar los alumnos de "Tratamiento de datos"?
-```{r}
+-A partir del análisis visual de la distribución de registros por día de la semana podemos deducir que:
+
+* **Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miercoles con un 23.3% ** y el **viernes con un 20.4%**. Estos picos nos pueden insinuar que los miercoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
+
+* **Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.3%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra el **89.8%** de toda la actividad semanal.
+
+-   ¿Cuáles son las horas a las que prefieren estudiar los alumnos de Tratamiento de datos?
+```{r graf-horas, echo=FALSE, message=FALSE, warning=FALSE}
 actividad_horas <- logs %>%
   group_by(hora) %>%
   summarise(total_clics = n()) %>%
@@ -346,7 +484,7 @@ ggplot(actividad_horas, aes(x = hora, y = total_clics)) +
   theme_minimal()
 ```
 
-```{r}
+```{r graf-horas-examentes, echo=FALSE, message=FALSE, warning=FALSE}
 #Definimos los dos periodos a comparar
 logs_comparativa_examenes <- logs %>%
   mutate(periodo = case_when(
@@ -379,10 +517,85 @@ ggplot(actividad_comparada, aes(x = hora, y = porcentaje_hora, color = periodo, 
   theme(legend.position = "bottom")
 ```
 
+-En cuanto a las horas:
+* **Pico de máxima actividad:** Este podemos ver que alcanza a las 9:00 que es la hora a la que empiezan las clases de por la mañana y se mantine con muy poca bajada hasta las 11:00 hora en que la primera clase acaba.
 
--   ¿En qué días de la semana y franjas horarias se concentran los mayores picos de actividad de los alumnos?
+* **Bajada de medio dia:** A parte observamos, que sobre las 15 hay una bajada bastante grande de actividad la cual podemos entender por ser horas en dond elos alumnos estaran saliendo de clase, comiendo y descaqnsanso.
+
+* **Periodo de tarde:** más tarde a partir de las 17:00 podemos ver como aumentan las entradas a "Tratamiento de datos" de forma moderada horas que seguramente usan los estudiantes ya para estudiar.
+
+* **Periodo de inactividad:**Y ya vemos una inactividad a las horas de madrugada que relacionamos con las horas de sueño de los estudiantes.
+
+* **Comparacion con época de éxamenes:** A partir de la pregunta de las horas durante el curso, nos hemosa interesado en si la inactividad nocturna al ser epoca de examenes aumentaria por lo que hemos creado uan nueva grafica comparando estos dos periodos. Aquí, podemos ver como en epoca de examenes hay una subida de registros a partir de las 22 de la noche que se mantiene hasta mas o emnos las 2 de la mañana , en dodne podemos ver como los alumnos aumentan las horas de estudio hasta altas horas de la noche.
 
 -   ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
+
+```{r}
+# --- 1. INGENIERÍA DE CARACTERÍSTICAS (FEATURE ENGINEERING) ---
+# Creamos un resumen del comportamiento individual de cada estudiante
+datos_estudiantes <- logs %>%
+  group_by(usuario) %>%
+  summarise(
+    interacciones_totales = n(),
+    dias_distintos_activos = n_distinct(fecha),
+    # Actividad nocturna: % de clics entre las 22:00 y las 04:00
+    pct_actividad_nocturna = sum(hora >= 22 | hora <= 4) / n(),
+    # Actividad en fin de semana: % de clics en sábado (6) o domingo (7)
+    pct_fin_semana = sum(wday(fecha, week_start = 1) %in% c(6, 7)) / n()
+  ) %>%
+  # Filtramos posibles usuarios "fantasma" con una actividad residual o nula
+  filter(interacciones_totales > 5) 
+
+# --- 2. PREPARACIÓN DE DATOS PARA K-MEANS ---
+# Seleccionamos solo las variables numéricas y las estandarizamos (Escala Z).
+# Esto es vital: evita que la variable "interacciones" (que tiene miles) 
+# aplaste a las variables de "porcentajes" (que van de 0 a 1).
+datos_numericos <- datos_estudiantes %>% select(-usuario)
+datos_escalados <- scale(datos_numericos)
+
+# --- 3. APLICACIÓN DEL MODELO ---
+set.seed(2026) # Fijamos una semilla para garantizar la reproducibilidad
+num_clusters <- 4 # Definimos 4 grupos (puedes ajustar este número)
+
+modelo_kmeans <- kmeans(datos_escalados, centers = num_clusters, nstart = 25)
+
+# Añadimos la etiqueta del clúster al dataset original de estudiantes
+datos_estudiantes$cluster <- as.factor(modelo_kmeans$cluster)
+
+# --- 4. INTERPRETACIÓN DE LOS CENTROIDES ---
+# Calculamos la media de cada variable por clúster para entender su comportamiento
+resumen_perfiles <- datos_estudiantes %>%
+  group_by(cluster) %>%
+  summarise(
+    n_estudiantes = n(),
+    media_interacciones = round(mean(interacciones_totales), 0),
+    media_dias_activos = round(mean(dias_distintos_activos), 0),
+    media_pct_nocturno = round(mean(pct_actividad_nocturna) * 100, 1),
+    media_pct_finde = round(mean(pct_fin_semana) * 100, 1)
+  )
+
+# --- 5. TABLA Y VISUALIZACIÓN ---
+# Mostramos la tabla resumen
+knitr::kable(resumen_perfiles, 
+             caption = "Características medias de los perfiles identificados por K-Means.",
+             col.names = c("Clúster", "Nº Estudiantes", "Media Interacciones", 
+                           "Media Días Activos", "% Nocturno", "% Fin de Semana"))
+
+# Gráfico de dispersión para visualizar la segmentación
+ggplot(datos_estudiantes, aes(x = dias_distintos_activos, y = interacciones_totales, color = cluster)) +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_color_brewer(palette = "Set1") +
+  labs(
+    title = "Segmentación de Perfiles de Estudiantes",
+    subtitle = "Agrupación K-Means según el patrón de uso del Aula Virtual",
+    x = "Constancia (Días distintos conectados)",
+    y = "Volumen de trabajo (Interacciones Totales)",
+    color = "Clúster asignado:"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
 
 -   ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
@@ -530,23 +743,11 @@ ggplot(comparativa, aes(x = tipo_recurso, fill = tipo_recurso)) +
   theme(legend.position = "none")
 ```
 
-# Discusión de los resultados
--A partir del análisis visual de la distribución de registros por día de la semana podemos deducir que:
 
-* **Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miercoles con un 23.3% ** y el **viernes con un 20.4%**. Estos picos nos pueden insinuar que los miercoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
 
-* **Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.3%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra el **89.8%** de toda la actividad semanal.
 
--Ahora, para la pregunta de las horas:
-* **Pico de máxima actividad:** Este podemos ver que alcanza a las 9:00 que es la hora a la que empiezan las clases de por la mañana y se mantine con muy poca bajada hasta las 11:00 hora en que la primera clase acaba.
 
-* **Bajada de medio dia:** A parte podemos ver, que sobre las 15 hay una bajada bastante grande de actividad la cual podemos entender por ser horas en dond elos alumnos estaran saliendo de clase, comiendo y descaqnsanso.
 
-* **Periodo de tarde:** más tarde a partir de las 17:00 podemos ver como aumentan las entradas a "Tratamiento de datos" de forma moderada horas que seguramente usan los estudiantes ya para estudiar.
-
-* **Periodo de inactividad:**Y ya vemos una inactividad a las horas de madrugada que relacionamos con las horas de sueño de los estudiantes.
-
-* **Comparacion con época de éxamenes:** A partir de la pregunta de las horas durante el curso, nos hemosa interesado en si la inactividad nocturna al ser epoca de examenes aumentaria por lo que hemos creado uan nueva grafica comparando estos dos periodos. Aquí, podemos ver como en epoca de examenes hay una subida de registros a partir de las 22 de la noche que se mantiene hasta mas o emnos las 2 de la mañana , en dodne podemos ver como los alumnos aumentan las horas de estudio hasta altas horas de la noche.
 
 # Conclusiones
 
