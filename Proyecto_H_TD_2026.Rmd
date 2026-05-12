@@ -123,7 +123,7 @@ logs <- logs %>%
 
 #Filtramos solo el cuatrimestre activo
 logs <- logs %>%
-  filter(fecha >= as.Date("2025-01-01") & fecha <= as.Date("2025-07-31"))
+  filter(fecha >= as.Date("2025-01-27") & fecha <= as.Date("2025-06-30"))
 
 # Variables categoricas a factor
 logs <- logs %>%
@@ -275,7 +275,7 @@ ggplot(actividad_usuario, aes(x = "Estudiantes", y = num_registros)) +
   geom_boxplot(width = 0.3, fill = "lightblue", color = "darkblue", alpha = 0.6, outlier.shape = NA) +
   # Añadimos los puntos de los estudiantes esparcidos horizontalmente
   geom_jitter(aes(color = tipo), width = 0.15, size = 2.5, alpha = 0.7) +
-  scale_color_manual(values = c("Normal" = "#7F8C8D", "Hiperactivo" = "#E74C3C", "Inactivo extremo" = "#F1C40F")) +
+  scale_color_manual(values = c("Normal" = "#grey", "Hiperactivo" = "deeppink", "Inactivo extremo" = "orange")) +
   labs(
     title = "Detección de valores atípicos en la actividad estudiantil",
     subtitle = "Identificación mediante el método del Rango Intercuartílico (IQR)",
@@ -375,13 +375,15 @@ Consideramos que es imposible realizar 2000 o 200 clics al dia, a no ser que se 
 # 1. Identificamos al usuario con actividad automatizada
 
 usuarios_anomalos <- actividad_usuario %>%
-  filter(num_registros > 2500	) %>%
+  filter(num_registros > 2000	) %>%
   pull(usuario)
 
 # 2. Creamos nuestro dataset limpio quitando SOLO a ese usuario
 logs <- logs %>%
   filter(!usuario %in% usuarios_anomalos)
 ```
+
+
 
 # Resultados: Respuesta a las Preguntas de Investigación
 
@@ -414,9 +416,9 @@ ggplot(actividad_semanal, aes(x = dia_semana, y = total_clics, fill = dia_semana
 
 ```
 
-**Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miercoles con un 23.3% ** y el **viernes con un 20.4%**. Estos picos nos pueden insinuar que los miercoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
+**Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miercoles con un 26.3% ** y el **viernes con un 19%**. Estos picos nos pueden insinuar que los miercoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
 
-**Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.3%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra el **89.8%** de toda la actividad semanal.
+**Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.8%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva y es mas activo los dias de clase. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra de toda la acla mayor parte de toda la actividad semanal.
 
 ## ¿Cuáles son las horas a las que prefieren estudiar los alumnos de Tratamiento de datos?
 
@@ -463,8 +465,8 @@ ggplot(actividad_comparada, aes(x = hora, y = porcentaje_hora, color = periodo, 
   geom_line(size = 1.2) +
   geom_area(alpha = 0.2, position = "identity") +
   scale_x_continuous(breaks = 0:23) +
-  scale_color_manual(values = c("Época de Exámenes" = "#E41A1C", "Periodo Lectivo (Clases)" = "#377EB8")) +
-  scale_fill_manual(values = c("Época de Exámenes" = "#E41A1C", "Periodo Lectivo (Clases)" = "#377EB8")) +
+  scale_color_manual(values = c("Época de Exámenes" = "red", "Periodo Lectivo (Clases)" = "blue")) +
+  scale_fill_manual(values = c("Época de Exámenes" = "red", "Periodo Lectivo (Clases)" = "blue")) +
   labs(title = "¿Cambian las horas de estudio en exámenes?",
        subtitle = "Comparativa de densidad de actividad horaria (Mayo-Junio vs Resto del curso)",
        x = "Hora del día (24h)",
@@ -488,39 +490,42 @@ ggplot(actividad_comparada, aes(x = hora, y = porcentaje_hora, color = periodo, 
 
 ## ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
 
-Para responder a la pregunta de si es posible agrupar a los alumnos según su uso del Aula Virtual, hemos realizado una segmentación basada en reglas lógicas. Hemos clasificado a los estudiantes comparando su actividad individual con el comportamiento general de la clase utilizando la mediana.
+Para segmentar a los estudiantes de la forma más realista posible, hemos utilizado un modelo basado en dos variables: la constancia (días distintos de conexión) y la intensidad de estudio (media de clics realizados por cada día activo). Utilizando las medianas de la clase como puntos de corte, la distribución revela tres perfiles muy definidos:
 
-Para ello, hemos calculado dos variables clave por cada estudiante: su constancia (días distintos que accede) y su volumen de trabajo (total de interacciones). Utilizando la mediana del grupo como punto de corte, hemos definido tres perfiles:
+**Perfil Constante (53.8%):** Algo más de la mitad de la clase (42 estudiantes) mantiene un hábito de estudio regular, conectándose al Aula Virtual más días que la mediana del grupo.
 
-Constantes: Alumnos que se conectan más días que la mediana de la clase.
+**Perfil de Última Hora o "Atracones" (25.6%):** Al medir la intensidad, hemos logrado identificar a un cuarto de la clase (20 alumnos) que presenta un patrón de estudio altamente reactivo. Estos estudiantes se conectan pocos días, pero cuando lo hacen, su volumen de interacciones diarias es extremo. Este hallazgo es fundamental, ya que correlaciona de forma directa con el alto porcentaje de entregas de última hora detectado en apartados anteriores.
 
-De Última Hora (Atracones): Alumnos que se conectan pocos días, pero acumulan un número de clics superior a la mediana (concentran mucho trabajo en poco tiempo).
-
-Baja Participación: Alumnos que están por debajo de la mediana tanto en días conectados como en clics totales.
+**Perfil de Baja Participación (20.5%):** Finalmente, identificamos a 16 estudiantes que se encuentran por debajo de la mediana tanto en días de conexión como en intensidad de uso. Este grupo representa el alumnado en riesgo de abandono o suspenso, y su detección temprana sería de gran utilidad para que el equipo docente pudiera aplicar medidas de refuerzo.
 
 Como resultado nos ha salido la Figura \@ref(fig:perfiles-basicos)
 
 ```{r perfiles-basicos, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución de los perfiles de estudiante."}
 
-# 1. Calculamos la actividad de cada estudiante
-datos_estudiantes <- logs %>%
+# 1. Calculamos la actividad y la INTENSIDAD de cada estudiante
+datos_estudiantes <- logs %>% 
   group_by(usuario) %>%
   summarise(
     total_clics = n(),
     dias_activos = n_distinct(fecha)
-  )
+  ) %>%
+  # calculamos cuántos clics hacen de media los días que entran
+  mutate(intensidad = total_clics / dias_activos)
 
-# 2. Calculamos las medianas de la clase para usarlas como barrera
-mediana_clics <- median(datos_estudiantes$total_clics)
+# 2. Calculamos las medianas para usarlas como barrera
 mediana_dias <- median(datos_estudiantes$dias_activos)
+mediana_intensidad <- median(datos_estudiantes$intensidad)
 
-# 3. Asignamos el perfil con reglas lógicas
+# 3. Asignamos el perfil con la nueva regla de intensidad
 datos_estudiantes <- datos_estudiantes %>%
   mutate(
     perfil = case_when(
-      dias_activos >= mediana_dias ~ "Constantes",
-      dias_activos < mediana_dias & total_clics >= mediana_clics ~ "De Última Hora (Atracones)",
-      dias_activos < mediana_dias & total_clics < mediana_clics ~ "Baja Participación"
+      # Si te conectas muchos días, eres constante
+      dias_activos >= mediana_dias ~ "Constantes", 
+      # Si te conectas pocos días, pero haces muchos clics de golpe = Atracón
+      dias_activos < mediana_dias & intensidad >= mediana_intensidad ~ "De Última Hora (Atracones)",
+      # Si te conectas pocos días y apenas haces clics = Baja participación
+      dias_activos < mediana_dias & intensidad < mediana_intensidad ~ "Baja Participación"
     )
   )
 
@@ -532,12 +537,11 @@ resumen_perfiles <- datos_estudiantes %>%
 # 5. Gráfico 
 ggplot(resumen_perfiles, aes(x = reorder(perfil, -n), y = n, fill = perfil)) +
   geom_col(color = "black", alpha = 0.8) +
-  # Añadimos el número y el porcentaje encima de cada barra
   geom_text(aes(label = paste0(n, " alums. (", porcentaje, "%)")), vjust = -0.5, fontface = "bold") +
   scale_fill_brewer(palette = "Pastel1") +
   labs(
     title = "Segmentación de los estudiantes de la asignatura",
-    subtitle = paste0("Puntos de corte: Mediana de días (", mediana_dias, ") y Mediana de clics (", mediana_clics, ")"),
+    subtitle = "Basado en la constancia (días) y la intensidad (clics por día)",
     x = "Perfil detectado",
     y = "Número de estudiantes"
   ) +
@@ -545,9 +549,10 @@ ggplot(resumen_perfiles, aes(x = reorder(perfil, -n), y = n, fill = perfil)) +
   theme(legend.position = "none")
 ```
 
-El análisis revela que la clase está prácticamente polarizada en dos grandes mitades. Por un lado, el perfil mayoritario es el de alumnos Constantes (51.3%), lo que indica que casi la mitad del grupo (40 estudiantes) hace un seguimiento regular de la asignatura, conectándose de forma asidua durante el cuatrimestre. Por otro lado, encontramos una proporción casi idéntica de alumnos con Baja Participación (41%), un dato que podría resultar de gran interés para el equipo docente, ya que engloba a 32 estudiantes que interactúan poco con los materiales y podrían estar en riesgo de abandonar la asignatura.
 
-Finalmente, resulta muy revelador haber identificado a 6 estudiantes (7.7%) en el perfil "De Última Hora". Esta métrica confirma empíricamente la existencia de un pequeño grupo de alumnos que prefiere no entrar al Aula Virtual durante semanas para, posteriormente, realizar picos masivos de interacciones (atracones de estudio) justo antes de las entregas o los exámenes.
+El análisis revela que la clase está prácticamente polarizada en dos grandes mitades. Por un lado, el perfil mayoritario es el de alumnos Constantes, lo que indica que casi la mitad del grupo hace un seguimiento regular de la asignatura, conectándose de forma asidua durante el cuatrimestre. Por otro lado, encontramos una proporción casi idéntica de alumnos con Baja Participación, un dato que podría resultar de gran interés para el equipo docente, ya que engloba a 31 estudiantes que interactúan poco con los materiales y podrían estar en riesgo de abandonar la asignatura.
+
+Finalmente, resulta muy revelador haber identificado a 7 estudiantes el perfil "De Última Hora". Esta métrica confirma empíricamente la existencia de un pequeño grupo de alumnos que prefiere no entrar al Aula Virtual durante semanas para, posteriormente, realizar picos masivos de interacciones (atracones de estudio) justo antes de las entregas o los exámenes.
 
 
 ## ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
@@ -557,7 +562,7 @@ Una de las métricas más interesantes para entender los hábitos de estudio del
 
 La fecha de cierre del Miniproyecto la hemos sacado de el curso archivado 2024-2025 de una estudiante.
 
-Como se puede observar en la gráfica, la opción absolutamente mayoritaria es entregar el trabajo en el último minuto (50.4%), es decir, con menos de 6 horas de margen respecto al cierre de la plataforma. Si a esto le sumamos el 14.3% que entrega durante ese mismo día y el 15.8% que lo hace el día de antes, comprobamos que más del 80% de la clase concentra el envío de su proyecto en las últimas 48 horas. Por el contrario, aproximadamente uno de cada cinco estudiantes (19.5%) demuestra una alta planificación, realizando la entrega con más de dos días de antelación.
+Como se puede observar en la gráfica, la opción absolutamente mayoritaria es entregar el trabajo en el último minuto (50.4%), es decir, con menos de 6 horas de margen respecto al cierre de la plataforma. Si a esto le sumamos el 14.3% que entrega durante ese mismo día y el 15.2% que lo hace el día de antes, comprobamos que más del 80% de la clase concentra el envío de su proyecto en las últimas 48 horas. Por el contrario, aproximadamente uno de cada cinco estudiantes (19.5%) demuestra una alta planificación, realizando la entrega con más de dos días de antelación.
 
 Estos datos confirman de forma rotunda el perfil del "estudio por atracón" que ya habíamos detectado al segmentar a los estudiantes. Desde un punto de vista técnico, que la mitad exacta de la clase intente subir sus archivos al Aula Virtual en la misma franja de 6 horas es un dato crítico. Esta métrica explica por qué los servidores de la universidad experimentan ralentizaciones y caídas durante los días de entrega.
 ```{r antelacion-entregas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Antelación en la entrega del Miniproyecto."}
@@ -611,77 +616,117 @@ ggplot(resumen_antelacion, aes(x = perfil_entrega, y = porcentaje, fill = perfil
 ```
 
 ## ¿Existe una diferencia significativa en la actividad de los alumnos entre los días laborables y los fines de semana o festivos?
-\@ref(fig:normal-fiesta)
+
+Para entender cómo afecta el calendario oficial (CALENDARIO ACADÉMICO, CURSO 2024-25 UNIVERSITAT DE VALÈNCIA) a los hábitos de estudio del alumnado, hemos analizado la distribución del volumen diario de interacciones clasificando los días del cuatrimestre en tres categorías: Laborables, Fines de semana y Festivos oficiales (sin clase).
+
+Como se puede observar visualmente en la Figura \@ref(fig:normal-fiesta), existe una diferencia muy significativa en el comportamiento de los estudiantes dependiendo del tipo de día:
+
+**Días Laborables:** Concentran el mayor volumen de actividad regular y la mayor variabilidad. La línea central de la caja verde muestra una mediana de interacciones muy superior al resto de días. Además, resultan de gran interés los valores atípicos superiores. Estos puntos no son errores, los outliers temporales corresponden a jornadas lectivas clave, como las fechas de entrega del Miniproyecto o las vísperas de exámenes, donde la actividad conjunta de toda la clase se dispara, confirmando el patrón de "estudio por atracón" detectado en apartados anteriores.
+
+**Fines de Semana:** Muestran una caída drástica en la mediana de interacciones, lo que indica un patrón generalizado de desconexión académica por parte de la mayoría de la clase. No obstante, se aprecian algunos picos puntuales que sugieren que ciertos estudiantes utilizan el fin de semana exclusivamente cuando hay fechas límite inminentes.
+
+**Días Festivos:** Presentan el nivel de actividad más bajo y constante de todos. La caja es prácticamente plana, lo que confirma que durante las fiestas oficiales del calendario universitario el acceso al Aula Virtual es residual o casi nulo
+
+Los datos demuestran que la dinámica de uso de la plataforma virtual está fuertemente condicionada por el calendario presencial. Los estudiantes no distribuyen su carga de trabajo de forma uniforme a lo largo de la semana, sino que concentran su esfuerzo casi exclusivamente en los días laborables ordinarios y, de forma masiva, en los días inmediatamente previos a una evaluación.
 
 ```{r normal-fiesta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Actividad de los alumnos: días sin universidad vs días laborables"}
-# PREGUNTA: ¿Hay diferencias entre días laborables, fines de semana y festivos?
 
-# 1. INYECCIÓN DE CONTEXTO: Definimos los festivos oficiales (Calendario UV 2025)
-# Ajusta estas fechas según el calendario académico real de tu curso
+# 1. Definimos los festivos oficiales (Calendario UV 2025)
 festivos_uv <- as.Date(c(
-  "2025-01-01", "2025-01-06", "2025-01-22", # Año Nuevo, Reyes, San Vicente Mártir
-  "2025-03-17", "2025-03-18", "2025-03-19", # Semana de Fallas (días sin clase)
-  "2025-04-17", "2025-04-18", "2025-04-21", "2025-04-28", # Jueves Santo a San Vicente Ferrer
-  "2025-05-01",                             # Día del Trabajador
-  "2025-06-24"                              # San Juan
+  # Final de vacaciones de Navidad y festivos de Enero
+  "2025-01-01", "2025-01-02", "2025-01-03", "2025-01-06", # Año Nuevo y Reyes
+  "2025-01-22", # San Vicente Mártir (Festivo local Valencia)
+  
+  # Semana de Fallas (Sin docencia)
+  "2025-03-17", "2025-03-18", "2025-03-19", 
+  
+  # Vacaciones de Pascua (Festivos oficiales + Días sin docencia)
+  "2025-04-17", "2025-04-18", "2025-04-21", # Jueves Santo, Viernes Santo y Lunes de Pascua
+  "2025-04-22", "2025-04-23", "2025-04-24", "2025-04-25", # Días no lectivos centrales
+  "2025-04-28", # San Vicente Ferrer
+  
+  # Festivos de final de curso
+  "2025-05-01", # Día del Trabajador
+  "2025-06-24"  # San Juan
 ))
 
-# 2. Agrupamos la actividad por día y clasificamos
+# 2. Agrupamos la actividad por día usando tu código original seguro
 actividad_calendario <- logs %>%
-  # Agrupamos todo por día para contar cuántos clics hubo
   group_by(fecha) %>%
-  summarise(interacciones = n()) %>%
+  summarise(clics_diarios = n(), .groups = "drop") %>%
   mutate(
-    # Usamos week_start = 1 para que Lunes sea 1 y Domingo 7
     dia_semana_num = wday(fecha, week_start = 1), 
     tipo_dia = case_when(
-      fecha %in% festivos_uv ~ "Festivo (Sin clase)",
-      dia_semana_num %in% c(6, 7) ~ "Fin de semana",
-      TRUE ~ "Laborable"
+      fecha %in% festivos_uv ~ "3. Festivo (Sin clase)",
+      dia_semana_num %in% c(6, 7) ~ "2. Fin de semana",
+      TRUE ~ "1. Laborable"
     )
   )
 
-# 3. TABLA: Comparamos las medias y medianas
-resumen_calendario <- actividad_calendario %>%
-  group_by(tipo_dia) %>%
-  summarise(
-    dias_totales = n(),
-    media_diaria = round(mean(interacciones), 1),
-    mediana_diaria = median(interacciones) # Usamos mediana para que los picos no distorsionen tanto
-  ) %>%
-  arrange(desc(media_diaria))
 
-knitr::kable(resumen_calendario, caption = "Actividad media y mediana según el calendario académico.")
+#grafico
+ggplot(actividad_calendario, aes(x = tipo_dia, y = clics_diarios, fill = tipo_dia)) +
+  geom_boxplot(alpha = 0.7, color = "black", outlier.color = "darkred") +
 
-# 4. GRÁFICO: Boxplot para ver la "diferencia significativa" visualmente
-# El factor se reordena para que salga en un orden lógico en el gráfico
-actividad_calendario$tipo_dia <- factor(actividad_calendario$tipo_dia, 
-                                        levels = c("Laborable", "Fin de semana", "Festivo (Sin clase)"))
-
-ggplot(actividad_calendario, aes(x = tipo_dia, y = interacciones, fill = tipo_dia)) +
-  geom_boxplot(alpha = 0.7, color = "black", outlier.color = "darkred", outlier.shape = 16) +
-  # Añadimos la media como un punto blanco extra dentro de la caja
-  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "white") +
-  scale_fill_manual(values = c("Laborable" = "#4DAF4A", 
-                               "Fin de semana" = "#377EB8", 
-                               "Festivo (Sin clase)" = "#E41A1C")) +
+  scale_fill_manual(values = c("1. Laborable" = "darkgreen", 
+                               "2. Fin de semana" = "blue", 
+                               "3. Festivo (Sin clase)" = "red")) +
   labs(title = "Distribución de la actividad de estudio",
-       subtitle = "El diamante blanco indica la media; la línea central negra, la mediana.",
-       x = "Tipo de día",
+       subtitle = "Comparativa del volumen de interacciones según el tipo de día",
+       x = "",
        y = "Volumen de interacciones diarias") +
   theme_minimal() +
   theme(legend.position = "none")
 ```
 
+
 ## ¿Qué porcentaje de la actividad se realiza en la ETSE y qué porcentaje se realiza fuera de esta?
-\@ref(fig:dentro-fuera)
+
+Para determinar si el uso del Aula Virtual se realiza principalmente en las instalaciones de la universidad o de forma remota, hemos analizado las direcciones IP de origen de cada interacción. Para garantizar la máxima precisión técnica, el algoritmo se ha diseñado para identificar tanto el rango clásico IPv4 de la Universitat de València (147.156.x.x) como el rango de nueva generación IPv6 asignado a través de RedIRIS (2001:720:1014::), capturando así todo el tráfico de la red eduroam y de los laboratorios. Sabemos que estas son las direcciónes IP de la ETSE ya que conectados a eduroam hemos mirado que IP teniamos.
+
+Como se puede observar en la Figura \@ref(fig:dentro-fuera), La mayor parte de la actividad (casi 47.000 clics) se realiza desde fuera de la facultad. Este dato resulta lógico y esperado, confirmando que la plataforma cumple su función esencial como entorno virtual de aprendizaje para el estudio autónomo, la realización de entregas y el trabajo desde casa.
+
+A pesar de tener un porcentaje menor, es destacable el altísimo volumen de actividad registrado en la ETSE (más de 32.600 interacciones). Este 42.4% demuestra que Moodle no es solo una herramienta de trabajo a distancia, sino que está integrada en la presencialidad. Los alumnos acceden masivamente a la plataforma desde la facultad, una métrica que se explica por la descarga de guiones durante las clases de laboratorio, el seguimiento de recursos en las clases teóricas o las horas de estudio en la biblioteca del campus.
 
 ```{r dentro-fuera, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Porcentaje de actividad dentro de la ETSE vs fuera."}
+# 1. Clasificamos las conexiones según la dirección IP
+ubicacion_datos <- logs %>%
+  mutate(
+    lugar_conexion = case_when(
+      str_starts(ip, "147.156.") | str_starts(ip, "2001:720:1014:") ~ "1. Dentro de la ETSE (Campus)",
+      TRUE ~ "2. Fuera de la ETSE (Casa, móvil...)"
+    )
+  )
 
+# porcentaje
+resumen_ubicacion <- ubicacion_datos %>%
+  count(lugar_conexion, name = "total_clics") %>%
+  mutate(porcentaje = round((total_clics / sum(total_clics)) * 100, 1))
+
+#gráfica
+ggplot(resumen_ubicacion, aes(x = lugar_conexion, y = porcentaje, fill = lugar_conexion)) +
+  geom_col(color = "black", alpha = 0.8, width = 0.6) +
+  geom_text(aes(label = paste0(porcentaje, "% \n(", total_clics, " clics)")), 
+            vjust = -0.3, fontface = "bold") +
+  scale_fill_manual(values = c("1. Dentro de la ETSE (Campus)" = "blue", 
+                               "2. Fuera de la ETSE (Casa, móvil...)" = "deeppink")) +
+  labs(
+    title = "¿Desde dónde se conectan los alumnos?",
+    subtitle = "Análisis basado en el rango de direcciones IP",
+    x = "Lugar de conexión",
+    y = "Porcentaje de actividad (%)"
+  ) +
+  # Ampliamos un poco el límite Y para que el texto de arriba no se corte
+  scale_y_continuous(limits = c(0, max(resumen_ubicacion$porcentaje) + 10)) + 
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 
 ## ¿Hay más actividad provocada por las tareas o se produce más para revisar los apuntes de cada tema?
-\@ref(fig:tareas-apuntes)
+
+Por último, se ha comparado el volumen de interacciones entre los dos recursos principales de la plataforma: los materiales de estudio (Apuntes) y las actividades evaluables (Tareas/Entregas). Esto se ve en la Figura \@ref(fig:tareas-apuntes) 
+
+Como evidencia de forma contundente el gráfico superior, existe una desproporción masiva en el uso de ambos recursos. Las interacciones con las Tareas superan con creces las 22.000 acciones, multiplicando por más de cinco el volumen de clics destinados a la visualización o descarga de Apuntes.
 
 ```{r tareas-apuntes, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Actividad de tareas vs apuntes."}
 
@@ -701,13 +746,14 @@ ggplot(comparativa, aes(x = tipo_recurso, fill = tipo_recurso)) +
 ```
 
 
-
-
-
-
-
 # Conclusiones
 
+Este análisis de los registros del Aula Virtual nos ha permitido ir mucho más allá de los simples números y descubrir cómo se comportan realmente los estudiantes de la asignatura en su día a día. Tras analizar miles de interacciones, podemos resumir los hábitos de la clase en tres grandes descubrimientos.
 
+El primero, trata de clasificar moodle como un portal de entregas, los datos demuestran que los alumnos tienen un enfoque totalmente práctico. Usan la plataforma principalmente para aquello que tiene impacto en su nota (las Tareas), mientras que la consulta de los materiales teóricos (Apuntes) es mínima. El estudiante prefiere descargar el temario una vez y no volver a interactuar con él, entrando al sistema casi exclusivamente para enviar sus trabajos.
 
+También determinamos que los alumnos procrastinan, hemos detectado de forma matemática la famosa procrastinación universitaria. Uno de cada cuatro estudiantes basa su estudio en sesiones de máxima intensidad ("atracones"), y los datos de las entregas lo confirman: más de la mitad de la clase sube su Miniproyecto faltando menos de 6 horas para el cierre. Esta forma de trabajar explica los grandes picos de actividad y la saturación que a veces sufren los servidores de la universidad.
 
+Por último, detectamos que los estudiantes consideran que los dias festivos són para descansar, el análisis del calendario y las ubicaciones rompe el mito de que el Aula Virtual es solo para estudiar los fines de semana. Por un lado, hemos visto que la actividad en festivos y fines de semana cae en picado, demostrando que los alumnos siguen el ritmo del calendario oficial. Por otro lado, un sorprendente 40% del tráfico se genera desde el propio campus (ETSE), lo que demuestra que la plataforma digital es un apoyo constante también durante las clases presenciales.
+
+Conocer esta realidad a través de la Ciencia de Datos es una herramienta de inmenso valor, ya que permite a los profesores diseñar asignaturas más adaptadas a la realidad y a los informáticos preparar los sistemas para que no colapsen en el momento de la verdad: el último minuto antes del cierre.
