@@ -711,4 +711,3 @@ ggplot(comparativa, aes(x = tipo_recurso, fill = tipo_recurso)) +
 
 
 
-
