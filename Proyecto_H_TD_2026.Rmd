@@ -275,7 +275,7 @@ ggplot(actividad_usuario, aes(x = "Estudiantes", y = num_registros)) +
   geom_boxplot(width = 0.3, fill = "lightblue", color = "darkblue", alpha = 0.6, outlier.shape = NA) +
   # Añadimos los puntos de los estudiantes esparcidos horizontalmente
   geom_jitter(aes(color = tipo), width = 0.15, size = 2.5, alpha = 0.7) +
-  scale_color_manual(values = c("Normal" = "#grey", "Hiperactivo" = "deeppink", "Inactivo extremo" = "orange")) +
+  scale_color_manual(values = c("Normal" = "grey", "Hiperactivo" = "deeppink", "Inactivo extremo" = "orange")) +
   labs(
     title = "Detección de valores atípicos en la actividad estudiantil",
     subtitle = "Identificación mediante el método del Rango Intercuartílico (IQR)",
