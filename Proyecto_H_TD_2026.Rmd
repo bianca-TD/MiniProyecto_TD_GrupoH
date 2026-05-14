@@ -757,3 +757,24 @@ También determinamos que los alumnos procrastinan, hemos detectado de forma mat
 Por último, detectamos que los estudiantes consideran que los dias festivos són para descansar, el análisis del calendario y las ubicaciones rompe el mito de que el Aula Virtual es solo para estudiar los fines de semana. Por un lado, hemos visto que la actividad en festivos y fines de semana cae en picado, demostrando que los alumnos siguen el ritmo del calendario oficial. Por otro lado, un sorprendente 40% del tráfico se genera desde el propio campus (ETSE), lo que demuestra que la plataforma digital es un apoyo constante también durante las clases presenciales.
 
 Conocer esta realidad a través de la Ciencia de Datos es una herramienta de inmenso valor, ya que permite a los profesores diseñar asignaturas más adaptadas a la realidad y a los informáticos preparar los sistemas para que no colapsen en el momento de la verdad: el último minuto antes del cierre.
+
+
+<br>
+**Acknowledgments:** Agradecemos al profesorado de la asignatura Tratamiento de Datos por facilitar los datos para este análisis y su apoyo en la resolución de dudas técnicas.
+
+**Abbreviations:**
+The following abbreviations are used in this manuscript:
+
+| | |
+| :--- | :--- |
+| **AED** | Análisis Exploratorio de Datos |
+| **IQR** | Rango Intercuartílico |
+| **ETSE** | Escola Tècnica Superior d'Enginyeria |
+| **UTC** | Coordinated Universal Time |
+
+**References:**
+
+1. Wickham, H., et al. Welcome to the tidyverse. *Journal of Open Source Software* **2019**, *4(43)*, 1686.
+2. Spinu, V.; Grolemund, G.; Wickham, H. *lubridate: Make Dealing with Dates a Little Easier*; **2023**. Disponible en: https://CRAN.R-project.org/package=lubridate
+3. R Core Team. *R: A Language and Environment for Statistical Computing*; R Foundation for Statistical Computing: Vienna, Austria, **2024**.
+4. Martínez Sober, M. *Mini Proyecto 2026. Análisis de los logs de la asignatura en Aula Virtual durante el curso 2024-2025*; Universitat de València, **2026**.
