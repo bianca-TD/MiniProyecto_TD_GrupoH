@@ -416,7 +416,7 @@ ggplot(actividad_semanal, aes(x = dia_semana, y = total_clics, fill = dia_semana
 
 ```
 
-**Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miercoles con un 26.3% ** y el **viernes con un 19%**. Estos picos nos pueden insinuar que los miercoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
+**Picos de máxima actividad:** Los días con mayor volumen de interacción son el **miércoles con un 26.3% ** y el **viernes con un 19%**. Estos picos nos pueden insinuar que los miércoles y viernes es cuando habian clases presenciales de esta asignatura y de ahi sus picos de recurrencia.
 
 **Desconexión en el fin de semana:** En la gráfica podemos observar una leve bajada que comienza el sabado dia en el cual podemos ver en nuestra gráfica es cuando nuestro número de registros toca fondo con un **4.8%**, siendo el día de menor actividad. Esto sugiere un patrón de comportamiento donde el alumnado prioriza el descanso tras la semana lectiva y es mas activo los dias de clase. Esto tambien lo podemos ver por el hecho de que de los dias de Lunes a viernes se concentra de toda la acla mayor parte de toda la actividad semanal.
 
@@ -442,7 +442,7 @@ ggplot(actividad_horas, aes(x = hora, y = total_clics)) +
        y = "Número total de interacciones") +
   theme_minimal()
 ```
-
+#¿Cambian las horas de estudio en exámenes?
 ```{r graf-horas-examentes, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparativa de densidad de franjas horarias examenes vs resto del curso."}
 #Definimos los dos periodos a comparar
 logs_comparativa_examenes <- logs %>%
@@ -480,13 +480,13 @@ ggplot(actividad_comparada, aes(x = hora, y = porcentaje_hora, color = periodo, 
 
 **Pico de máxima actividad:** Este podemos ver que alcanza a las 9:00 que es la hora a la que empiezan las clases de por la mañana y se mantine con muy poca bajada hasta las 11:00 hora en que la primera clase acaba.
 
-**Bajada de medio dia:** A parte observamos, que sobre las 15 hay una bajada bastante grande de actividad la cual podemos entender por ser horas en dond elos alumnos estaran saliendo de clase, comiendo y descaqnsanso.
+**Bajada de medio dia:** A parte observamos, que sobre las 15 hay una bajada bastante grande de actividad la cual podemos entender por ser horas en dond elos alumnos estaran saliendo de clase, comiendo y descansanso.
 
 **Periodo de tarde:** más tarde a partir de las 17:00 podemos ver como aumentan las entradas a "Tratamiento de datos" de forma moderada horas que seguramente usan los estudiantes ya para estudiar.
 
 **Periodo de inactividad:**Y ya vemos una inactividad a las horas de madrugada que relacionamos con las horas de sueño de los estudiantes.
 
-**Comparacion con época de éxamenes:** A partir de la pregunta de las horas durante el curso, nos hemosa interesado en si la inactividad nocturna al ser epoca de examenes aumentaria por lo que hemos creado uan nueva grafica comparando estos dos periodos. Aquí, podemos ver como en epoca de examenes hay una subida de registros a partir de las 22 de la noche que se mantiene hasta mas o emnos las 2 de la mañana , en dodne podemos ver como los alumnos aumentan las horas de estudio hasta altas horas de la noche.
+**Comparacion con época de éxamenes:** A partir de la pregunta de las horas durante el curso, nos hemos interesado en si la inactividad nocturna al ser epoca de examenes aumentaria por lo que hemos creado uan nueva grafica comparando estos dos periodos. Aquí, podemos ver como en epoca de examenes hay una subida de registros a partir de las 22 de la noche que se mantiene hasta mas o emnos las 2 de la mañana , en dodne podemos ver como los alumnos aumentan las horas de estudio hasta altas horas de la noche.
 
 ## ¿Es posible identificar y agrupar a los alumnos en distintos "perfiles de estudiante" (ej. constantes, de última hora, inactivos) según sus patrones de uso del Aula Virtual?
 
@@ -754,7 +754,7 @@ El primero, trata de clasificar moodle como un portal de entregas, los datos dem
 
 También determinamos que los alumnos procrastinan, hemos detectado de forma matemática la famosa procrastinación universitaria. Uno de cada cuatro estudiantes basa su estudio en sesiones de máxima intensidad ("atracones"), y los datos de las entregas lo confirman: más de la mitad de la clase sube su Miniproyecto faltando menos de 6 horas para el cierre. Esta forma de trabajar explica los grandes picos de actividad y la saturación que a veces sufren los servidores de la universidad.
 
-Por último, detectamos que los estudiantes consideran que los dias festivos són para descansar, el análisis del calendario y las ubicaciones rompe el mito de que el Aula Virtual es solo para estudiar los fines de semana. Por un lado, hemos visto que la actividad en festivos y fines de semana cae en picado, demostrando que los alumnos siguen el ritmo del calendario oficial. Por otro lado, un sorprendente 40% del tráfico se genera desde el propio campus (ETSE), lo que demuestra que la plataforma digital es un apoyo constante también durante las clases presenciales.
+Por último, detectamos que los estudiantes consideran que los días festivos son para descansar, el análisis del calendario y las ubicaciones rompe el mito de que el Aula Virtual es solo para estudiar los fines de semana. Por un lado, hemos visto que la actividad en festivos y fines de semana cae en picado, demostrando que los alumnos siguen el ritmo del calendario oficial. Por otro lado, un sorprendente 40% del tráfico se genera desde el propio campus (ETSE), lo que demuestra que la plataforma digital es un apoyo constante también durante las clases presenciales.
 
 Conocer esta realidad a través de la Ciencia de Datos es una herramienta de inmenso valor, ya que permite a los profesores diseñar asignaturas más adaptadas a la realidad y a los informáticos preparar los sistemas para que no colapsen en el momento de la verdad: el último minuto antes del cierre.
 
