@@ -332,7 +332,7 @@ Por un lado, los valores atípicos inferiores (alumnos con muy pocos clics) repr
 
 Para determinar si los alumnos hiperactivos són bots o simplemente alumnos muy estudiosos y que durante todo el curso, dia tras dia se meten en el aula virtual, representamos la distribución de sus clics en la Figura\@ref(fig:comport-hip)
 
-```{r comport-hip, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Análisis de comportamiento: Usuarios Hiperactivos.", fig.pos = "H"}
+```{r comport-hip, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="...", fig.pos = "H", out.width = "80%"}
 
 # 1. Sacamos la lista de los usuarios que hemos clasificado como hiperactivos
 usuarios_hiperactivos <- actividad_usuario %>%
