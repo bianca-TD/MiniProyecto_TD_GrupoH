@@ -502,34 +502,32 @@ Como resultado nos ha salido la Figura \@ref(fig:perfiles-basicos)
 
 ```{r perfiles-basicos, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución de los perfiles de estudiante."}
 
-# 1. Calculamos la actividad y la INTENSIDAD de cada estudiante
+
 datos_estudiantes <- logs %>% 
   group_by(usuario) %>%
   summarise(
     total_clics = n(),
     dias_activos = n_distinct(fecha)
   ) %>%
-  # calculamos cuántos clics hacen de media los días que entran
+
   mutate(intensidad = total_clics / dias_activos)
 
-# 2. Calculamos las medianas para usarlas como barrera
+
 mediana_dias <- median(datos_estudiantes$dias_activos)
 mediana_intensidad <- median(datos_estudiantes$intensidad)
 
-# 3. Asignamos el perfil con la nueva regla de intensidad
 datos_estudiantes <- datos_estudiantes %>%
   mutate(
     perfil = case_when(
-      # Si te conectas muchos días, eres constante
+ 
       dias_activos >= mediana_dias ~ "Constantes", 
-      # Si te conectas pocos días, pero haces muchos clics de golpe = Atracón
+ 
       dias_activos < mediana_dias & intensidad >= mediana_intensidad ~ "De Última Hora (Atracones)",
-      # Si te conectas pocos días y apenas haces clics = Baja participación
+
       dias_activos < mediana_dias & intensidad < mediana_intensidad ~ "Baja Participación"
     )
   )
 
-# 4. Contamos cuántos alumnos hay en cada perfil para hacer la gráfica
 resumen_perfiles <- datos_estudiantes %>%
   count(perfil) %>%
   mutate(porcentaje = round((n / sum(n)) * 100, 1))
@@ -555,33 +553,37 @@ El análisis revela que la clase está prácticamente polarizada en dos grandes 
 Finalmente, resulta muy revelador haber identificado a 7 estudiantes el perfil "De Última Hora". Esta métrica confirma empíricamente la existencia de un pequeño grupo de alumnos que prefiere no entrar al Aula Virtual durante semanas para, posteriormente, realizar picos masivos de interacciones (atracones de estudio) justo antes de las entregas o los exámenes.
 
 
-## ¿Con cuánta antelación entregan el Miniproyecto los alumnos?
+## ¿Con cuánta antelación entregan el Miniproyecto los grupos de alumnos?
 \@ref(fig:antelacion-entregas)
 
-Una de las métricas más interesantes para entender los hábitos de estudio del alumnado es su grado de planificación frente a las fechas límite. Al calcular la diferencia en horas entre el último archivo enviado por cada estudiante y la hora de cierre del Miniproyecto, los resultados revelan una alarmante tendencia hacia la procrastinación extrema.
+Una de las métricas más interesantes para entender los hábitos de estudio del alumnado es su grado de planificación frente a las fechas límite. Al calcular la diferencia en horas entre el último archivo enviado por cada grupo y la hora de cierre del Miniproyecto, los resultados revelan una alarmante tendencia hacia la procrastinación extrema.
 
 La fecha de cierre del Miniproyecto la hemos sacado de el curso archivado 2024-2025 de una estudiante.
 
-Como se puede observar en la gráfica, la opción absolutamente mayoritaria es entregar el trabajo en el último minuto (50.4%), es decir, con menos de 6 horas de margen respecto al cierre de la plataforma. Si a esto le sumamos el 14.3% que entrega durante ese mismo día y el 15.2% que lo hace el día de antes, comprobamos que más del 80% de la clase concentra el envío de su proyecto en las últimas 48 horas. Por el contrario, aproximadamente uno de cada cinco estudiantes (19.5%) demuestra una alta planificación, realizando la entrega con más de dos días de antelación.
+Como se puede observar en la gráfica, la opción mayoritaria sigue siendo realizar el envío final en el último minuto (46.4%), es decir, con menos de 6 horas de margen respecto al cierre de la plataforma. Si a esto le sumamos el 15.5% que entrega durante ese mismo día y el 17.9% que lo hace la jornada anterior, comprobamos que prácticamente el 80% (79.8%) de los grupos concentra la subida de su proyecto en las últimas 48 horas. Por el contrario, uno de cada cinco grupos (20.2%) demuestra una alta planificación, realizando la entrega con más de dos días de antelación.
 
-Estos datos confirman de forma rotunda el perfil del "estudio por atracón" que ya habíamos detectado al segmentar a los estudiantes. Desde un punto de vista técnico, que la mitad exacta de la clase intente subir sus archivos al Aula Virtual en la misma franja de 6 horas es un dato crítico. Esta métrica explica por qué los servidores de la universidad experimentan ralentizaciones y caídas durante los días de entrega.
-```{r antelacion-entregas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Antelación en la entrega del Miniproyecto."}
+Estos datos confirman de forma rotunda el patrón de "trabajo por atracón" fuertemente condicionado por las fechas límite. Desde un punto de vista técnico, que casi la mitad de los grupos de la clase intente subir sus archivos al Aula Virtual en la misma franja de 6 horas es un dato crítico. Esta métrica explica los picos de actividad en los servidores de la universidad y justifica las habituales ralentizaciones durante los días clave de evaluación.
+```{r antelacion-entregas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Antelación en la entrega del Miniproyecto por parte de los grupos."}
 
-# 1. Filtramos para quedarnos SOLO con las entregas de Tareas en mayo
+#me quedo con los envíos reales de la Tarea en mayo
 entregas_mayo <- logs %>%
-  filter(componente == "Tarea") %>%
+  filter(
+    componente == "Tarea",
+    #filtro palabras clave
+    str_detect(tolower(evento), "entrega|submission|enviado|submitted") 
+  ) %>%
   filter(fecha >= as.Date("2025-05-01") & fecha <= as.Date("2025-05-13"))
 
-# 2. Si un alumno entregó varias veces, nos quedamos solo con la última vez
+# última vez que ese usuario subió el archivo
 ultima_entrega <- entregas_mayo %>%
   group_by(usuario) %>%
   filter(fecha_hora == max(fecha_hora)) %>%
   ungroup()
 
-# 3. Definimos a qué hora se cerraba la entrega
+#a qué hora se cerraba la entrega
 fecha_limite <- as.POSIXct("2025-05-13 23:55:00")
 
-# 4. Calculamos el tiempo de margen y clasificamos
+#tiempo de margen y clasificamos las entregas
 clasificacion_entregas <- ultima_entrega %>%
   mutate(
     horas_margen = as.numeric(difftime(fecha_limite, fecha_hora, units = "hours")),
@@ -593,25 +595,32 @@ clasificacion_entregas <- ultima_entrega %>%
     )
   )
 
-# 5. Hacemos el recuento para la gráfica
+# ecuento para la gráfica
 resumen_antelacion <- clasificacion_entregas %>%
-  count(perfil_entrega, name = "numero_alumnos") %>%
-  mutate(porcentaje = round((numero_alumnos / sum(numero_alumnos)) * 100, 1))
+  count(perfil_entrega, name = "numero_entregas") %>%
+  mutate(porcentaje = round((numero_entregas / sum(numero_entregas)) * 100, 1))
 
-# 6. Gráfica básica y clara
+# graf
 ggplot(resumen_antelacion, aes(x = perfil_entrega, y = porcentaje, fill = perfil_entrega)) +
   geom_col(color = "black", alpha = 0.8) +
-  # Ponemos el % encima de la barra
   geom_text(aes(label = paste0(porcentaje, "%")), vjust = -0.5) +
+  scale_fill_manual(values = c(
+    "1. Con mucha antelación (>2 días)" = "turquoise",
+    "2. El día de antes" = "gold",
+    "3. El mismo día" = "deeppink",
+    "4. Último minuto (<6 horas)" = "coral"
+  )) +
+
+  scale_y_continuous(limits = c(0, max(resumen_antelacion$porcentaje) * 1.15)) +
   labs(
-    title = "¿Con cuánta antelación entregan el Miniproyecto?",
+    title = "¿Con cuánta antelación entregan los grupos el Miniproyecto?",
     x = "Momento de la entrega",
-    y = "Porcentaje de alumnos (%)"
+    y = "Porcentaje de entregas (%)"
   ) +
   theme_minimal() +
   theme(
-    legend.position = "none", # Quitamos la leyenda lateral
-    axis.text.x = element_text(angle = 15, hjust = 1) # Giramos un poco el texto para que quepa
+    legend.position = "none", 
+    axis.text.x = element_text(angle = 15, hjust = 1, face = "bold") 
   )
 ```
 
