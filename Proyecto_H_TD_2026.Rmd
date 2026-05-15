@@ -9,6 +9,7 @@ output:
     number_sections: true
     figure_caption: "Figura" 
     table_caption: "Tabla"
+    extra_dependencies: ["float"]
   bookdown::html_document2:
     echo: true
     number_sections: true
@@ -331,7 +332,7 @@ Por un lado, los valores atípicos inferiores (alumnos con muy pocos clics) repr
 
 Para determinar si los alumnos hiperactivos són bots o simplemente alumnos muy estudiosos y que durante todo el curso, dia tras dia se meten en el aula virtual, representamos la distribución de sus clics en la Figura\@ref(fig:comport-hip)
 
-```{r comport-hip, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Análisis de comportamiento: Usuarios Hiperactivos."}
+```{r comport-hip, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Análisis de comportamiento: Usuarios Hiperactivos.", fig.pos = "H"}
 
 # 1. Sacamos la lista de los usuarios que hemos clasificado como hiperactivos
 usuarios_hiperactivos <- actividad_usuario %>%
@@ -442,7 +443,8 @@ ggplot(actividad_horas, aes(x = hora, y = total_clics)) +
        y = "Número total de interacciones") +
   theme_minimal()
 ```
-#¿Cambian las horas de estudio en exámenes?
+
+
 ```{r graf-horas-examentes, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparativa de densidad de franjas horarias examenes vs resto del curso."}
 #Definimos los dos periodos a comparar
 logs_comparativa_examenes <- logs %>%
