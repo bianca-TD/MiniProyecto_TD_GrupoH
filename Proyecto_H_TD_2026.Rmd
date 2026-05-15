@@ -159,7 +159,7 @@ Tras ejecutar el proceso de limpieza y la creación de nuevas variables temporal
 A continuación, en la Tabla \@ref(tab:resumen-dataset) se exponen las métricas generales que dimensionan el ecosistema de la asignatura, mostrando la cantidad de alumnos implicados y la diversidad de acciones que pueden realizar.
 
 
-```{r resumen-dataset, echo = FALSE, warning = FALSE, message = FALSE, fig.cap="Métricas generales de dataset."}
+```{r resumen-dataset, echo = FALSE, warning = FALSE, message = FALSE, fig.cap="Métricas generales de dataset.", fig.pos = "H", out.width = "85%"}
 
 resumen <- data.frame(
   `Métrica` = c("Total de registros (limpios)", 
@@ -176,7 +176,7 @@ knitr::kable(resumen, caption = "Resumen estructural del conjunto de datos.")
 ```
 Para garantizar la reproducibilidad y la correcta interpretación de los análisis posteriores, es indispensable documentar el estado final de las características del dataframe. El Diccionario de Datos resultante, donde se especifican los tipos (como Factor o POSIXct), se presenta en la Tabla \@ref(tab:diccionario-datos).
 
-```{r diccionario-datos, echo = FALSE, warning = FALSE, message = FALSE, fig.cap="Explicación de nuestras variables."}
+```{r diccionario-datos, echo = FALSE, warning = FALSE, message = FALSE, fig.cap="Explicación de nuestras variables.", fig.pos = "H", out.width = "85%"}
 
 # Creamos el dataframe con las 13 variables actuales
 diccionario_final <- data.frame(
@@ -213,7 +213,7 @@ Una vez validada la integridad y estructura de la información, procedemos a exa
 
 Como ejemplo principal de esta exploración univariante, la Figura \@ref(fig:distribucion-horas) ilustra la frecuencia de los accesos e interacciones a lo largo de las distintas horas del día. Esta visualización nos permite identificar de un vistazo las franjas de mayor rendimiento y los periodos de inactividad nocturna.
 
-```{r distribucion-horas, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Distribución horaria de los registros"}
+```{r distribucion-horas, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Distribución horaria de los registros", fig.pos = "H", out.width = "85%"}
 
 ggplot(logs, aes(x = hora)) +
   geom_bar(fill = "darkblue", color = "black", alpha = 0.8) +
@@ -240,7 +240,7 @@ Este método nos permite calcular unos límites matemáticos para definir qué e
 
 La Figura \@ref(fig:analisis-outliers) muestra la distribución de la actividad por estudiante mediante un diagrama de caja (boxplot), acompañado de los puntos individuales correspondientes a cada usuario.
 
-```{r analisis-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución del volumen de actividad por usuario."}
+```{r analisis-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución del volumen de actividad por usuario.", fig.pos = "H", out.width = "85%"}
 
 # 1. Agregamos la actividad por estudiante
 actividad_usuario <- logs %>%
@@ -308,7 +308,7 @@ La principal conclusión que extraemos de esta fase del Análisis Exploratorio e
 Para tener un mayor control sobre estos casos aislados, en la Tabla \@ref(tab:tabla-outliers) detallamos exactamente cuántos clics han realizado los estudiantes identificados como atípicos.
 
 
-```{r tabla-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Estudiantes clasificados con un comportamiento atípico."}
+```{r tabla-outliers, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Estudiantes clasificados con un comportamiento atípico.", fig.pos = "H", out.width = "85%"}
 
 # Filtramos solo los estudiantes atípicos (Hiperactivos o Inactivos extremos)
 tabla_outliers <- actividad_usuario %>%
@@ -392,7 +392,7 @@ logs <- logs %>%
 
 A partir del análisis visual de la distribución de registros por día de la semana  de la Figura \@ref(fig:graf-dias), y de la Tabla \@ref(tab:actividad_semanal), podemos deducir que:
 
-```{r graf-dias, echo=FALSE, message=FALSE, warning=FALSE,  fig.cap="Picos de actividad según el día de la semana"}
+```{r graf-dias, echo=FALSE, message=FALSE, warning=FALSE,  fig.cap="Picos de actividad según el día de la semana", fig.pos = "H", out.width = "85%"}
 
 actividad_semanal <- logs %>%
   group_by(dia_semana) %>%
@@ -425,7 +425,7 @@ ggplot(actividad_semanal, aes(x = dia_semana, y = total_clics, fill = dia_semana
 
 Como se puede observar en la Figura \@ref(fig:graf-horas) y en la Figura \@ref(fig:graf-horas-examentes), en cuanto a las horas:
 
-```{r graf-horas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución de la actividad por franjas horarias."}
+```{r graf-horas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución de la actividad por franjas horarias.", fig.pos = "H", out.width = "85%"}
 actividad_horas <- logs %>%
   group_by(hora) %>%
   summarise(total_clics = n()) %>%
@@ -445,7 +445,8 @@ ggplot(actividad_horas, aes(x = hora, y = total_clics)) +
 ```
 
 
-```{r graf-horas-examentes, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparativa de densidad de franjas horarias examenes vs resto del curso."}
+
+```{r graf-horas-examentes, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparativa de densidad de franjas horarias examenes vs resto del curso.", fig.pos = "H", out.width = "85%"}
 #Definimos los dos periodos a comparar
 logs_comparativa_examenes <- logs %>%
   mutate(periodo = case_when(
@@ -502,7 +503,7 @@ Para segmentar a los estudiantes de la forma más realista posible, hemos utiliz
 
 Como resultado nos ha salido la Figura \@ref(fig:perfiles-basicos)
 
-```{r perfiles-basicos, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución de los perfiles de estudiante."}
+```{r perfiles-basicos, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribución de los perfiles de estudiante.", fig.pos = "H", out.width = "85%"}
 
 
 datos_estudiantes <- logs %>% 
@@ -565,7 +566,7 @@ La fecha de cierre del Miniproyecto la hemos sacado de el curso archivado 2024-2
 Como se puede observar en la gráfica, la opción mayoritaria sigue siendo realizar el envío final en el último minuto (46.4%), es decir, con menos de 6 horas de margen respecto al cierre de la plataforma. Si a esto le sumamos el 15.5% que entrega durante ese mismo día y el 17.9% que lo hace la jornada anterior, comprobamos que prácticamente el 80% (79.8%) de los grupos concentra la subida de su proyecto en las últimas 48 horas. Por el contrario, uno de cada cinco grupos (20.2%) demuestra una alta planificación, realizando la entrega con más de dos días de antelación.
 
 Estos datos confirman de forma rotunda el patrón de "trabajo por atracón" fuertemente condicionado por las fechas límite. Desde un punto de vista técnico, que casi la mitad de los grupos de la clase intente subir sus archivos al Aula Virtual en la misma franja de 6 horas es un dato crítico. Esta métrica explica los picos de actividad en los servidores de la universidad y justifica las habituales ralentizaciones durante los días clave de evaluación.
-```{r antelacion-entregas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Antelación en la entrega del Miniproyecto por parte de los grupos."}
+```{r antelacion-entregas, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Antelación en la entrega del Miniproyecto por parte de los grupos.", fig.pos = "H", out.width = "85%"}
 
 #me quedo con los envíos reales de la Tarea en mayo
 entregas_mayo <- logs %>%
@@ -640,7 +641,7 @@ Como se puede observar visualmente en la Figura \@ref(fig:normal-fiesta), existe
 
 Los datos demuestran que la dinámica de uso de la plataforma virtual está fuertemente condicionada por el calendario presencial. Los estudiantes no distribuyen su carga de trabajo de forma uniforme a lo largo de la semana, sino que concentran su esfuerzo casi exclusivamente en los días laborables ordinarios y, de forma masiva, en los días inmediatamente previos a una evaluación.
 
-```{r normal-fiesta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Actividad de los alumnos: días sin universidad vs días laborables"}
+```{r normal-fiesta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Actividad de los alumnos: días sin universidad vs días laborables",fig.pos = "H", out.width = "85%"}
 
 # 1. Definimos los festivos oficiales (Calendario UV 2025)
 festivos_uv <- as.Date(c(
@@ -699,7 +700,7 @@ Como se puede observar en la Figura \@ref(fig:dentro-fuera), La mayor parte de l
 
 A pesar de tener un porcentaje menor, es destacable el altísimo volumen de actividad registrado en la ETSE (más de 32.600 interacciones). Este 42.4% demuestra que Moodle no es solo una herramienta de trabajo a distancia, sino que está integrada en la presencialidad. Los alumnos acceden masivamente a la plataforma desde la facultad, una métrica que se explica por la descarga de guiones durante las clases de laboratorio, el seguimiento de recursos en las clases teóricas o las horas de estudio en la biblioteca del campus.
 
-```{r dentro-fuera, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Porcentaje de actividad dentro de la ETSE vs fuera."}
+```{r dentro-fuera, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Porcentaje de actividad dentro de la ETSE vs fuera.", fig.pos = "H", out.width = "85%"}
 # 1. Clasificamos las conexiones según la dirección IP
 ubicacion_datos <- logs %>%
   mutate(
@@ -739,7 +740,7 @@ Por último, se ha comparado el volumen de interacciones entre los dos recursos 
 
 Como evidencia de forma contundente el gráfico superior, existe una desproporción masiva en el uso de ambos recursos. Las interacciones con las Tareas superan con creces las 22.000 acciones, multiplicando por más de cinco el volumen de clics destinados a la visualización o descarga de Apuntes.
 
-```{r tareas-apuntes, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Actividad de tareas vs apuntes."}
+```{r tareas-apuntes, echo=FALSE, message = FALSE, warning = FALSE, fig.cap="Actividad de tareas vs apuntes.", fig.pos = "H", out.width = "85%"}
 
 # Filtramos los componentes que representan tareas y apuntes
 comparativa <- logs %>%
@@ -787,5 +788,5 @@ The following abbreviations are used in this manuscript:
 
 1. Wickham, H., et al. Welcome to the tidyverse. *Journal of Open Source Software* **2019**, *4(43)*, 1686.
 2. Spinu, V.; Grolemund, G.; Wickham, H. *lubridate: Make Dealing with Dates a Little Easier*; **2023**. Disponible en: https://CRAN.R-project.org/package=lubridate
-3. R Core Team. *R: A Language and Environment for Statistical Computing*; R Foundation for Statistical Computing: Vienna, Austria, **2024**.
+3. R Core Team. *R: A Language and Environment for Statistical Computing*; R Foundation for Statistical Com puting: Vienna, Austria, **2024**.
 4. Martínez Sober, M. *Mini Proyecto 2026. Análisis de los logs de la asignatura en Aula Virtual durante el curso 2024-2025*; Universitat de València, **2026**.
